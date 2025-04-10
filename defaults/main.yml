@@ -158,6 +158,9 @@ docmost_systemd_required_services_list_custom: []
 # List of systemd services that the Docmost systemd service wants
 docmost_systemd_wanted_services_list: []
 
+# Specify the path for storing uploaded files on the host
+docmost_data_path: ''
+
 # env.j2: Specify application's URL and port
 docmost_environment_variable_app_url: "{{ docmost_scheme }}://{{ docmost_hostname }}"
 docmost_environment_variable_port: 3000
