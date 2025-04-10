@@ -3,7 +3,7 @@ galaxy_info:
   company: progressiv
   role_name: docmost
   namespace: progressiv
-  description: Docmost by Tim Visée
+  description: Docmost
   platforms:
     - name: Debian
       versions:

@@ -7,16 +7,14 @@
 # SPDX-License-Identifier: AGPL-3.0-or-later
 
 ---
-# Project source code URL: https://github.com/timvisee/docmost
+# Project source code URL: https://github.com/docmost/docmost
 
 docmost_enabled: true
 
 docmost_identifier: docmost
 docmost_base_path: "{{ docmost_identifier }}"
 
-# There are version tags, but use "latest" for now, as it contains some
-# fixes which are yet to be released for tagged images.
-docmost_version: latest
+docmost_version: 0.10.1
 
 docmost_uid: ''
 docmost_gid: ''
@@ -24,7 +22,7 @@ docmost_gid: ''
 # The hostname at which Docmost is served.
 docmost_hostname: ''
 
-# Specify URI scheme for docmost_environment_variable_base_url.
+# Specify URI scheme for docmost_environment_variable_app_url.
 docmost_scheme: https
 
 # The path at which Docmost is exposed.
@@ -34,11 +32,11 @@ docmost_scheme: https
 # technical limitations.
 docmost_path_prefix: /
 
-docmost_container_image: "{{ docmost_container_image_registry_prefix }}timvisee/docmost:{{ docmost_container_image_tag }}"
+docmost_container_image: "{{ docmost_container_image_registry_prefix }}docmost/docmost:{{ docmost_container_image_tag }}"
 docmost_container_image_tag: "{{ docmost_version }}"
 docmost_container_image_registry_prefix: "{{ docmost_container_image_registry_prefix_upstream }}"
 docmost_container_image_registry_prefix_upstream: "{{ docmost_container_image_registry_prefix_upstream_default }}"
-docmost_container_image_registry_prefix_upstream_default: registry.gitlab.com/
+docmost_container_image_registry_prefix_upstream_default: docker.io/
 docmost_container_image_force_pull: "{{ docmost_container_image.endswith(':latest') }}"
 
 # Controls whether the container exposes its HTTP port (tcp/80 in the container).
