@@ -111,7 +111,7 @@ Make sure permissions of the directory specified to `src` (`/path/on/the/host`).
 To use Amazon S3 or a S3 compatible object storage, add the following configuration to your `vars.yml` file (adapt to your needs):
 
 ```yaml
-docmost_storage_backend_option: s3compatible
+docmost_environment_variable_storage_driver: s3compatible
 
 # Set a S3 bucket name to use
 docmost_environment_variable_S3_bucket: ''
@@ -134,7 +134,7 @@ docmost_environment_variable_aws_secret_access_key: ''
 To use Google Cloud Storage, add and adjust the following configuration to your `vars.yml` file:
 
 ```yaml
-docmost_storage_backend_option: gcs
+docmost_environment_variable_storage_driver: gcs
 
 # Set a Google Cloud Storage bucket
 docmost_environment_variable_gcs_bucket: ''

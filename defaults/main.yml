@@ -158,70 +158,68 @@ docmost_systemd_required_services_list_custom: []
 # List of systemd services that the Docmost systemd service wants
 docmost_systemd_wanted_services_list: []
 
-# Control storage backend options
-# Also see: https://github.com/timvisee/docmost/blob/master/docs/docker.md#storage-backend-options
-#
-# Valid values: localsystem (default), s3compatible, gcs
-docmost_storage_backend_option: localsystem
+# env.j2: Specify application's URL and port
+docmost_environment_variable_app_url: "{{ docmost_scheme }}://{{ docmost_hostname }}"
+docmost_environment_variable_port: 3000
 
-# env.j2: Server configuration
-#
-# Set the HTTPS URL where traffic will be served
-docmost_environment_variable_base_url: "{{ docmost_scheme }}://{{ docmost_hostname }}"
-# Control whether the base URL is detected automatically using browser if docmost_environment_variable_base_url is unset
-docmost_environment_variable_detect_base_url: false
-# Set the port number on which the server will listen
-docmost_environment_variable_port: 1443
-# Control whether Docmost is run on `development` mode (unsafe) or `production` mode
-docmost_environment_variable_node_env: production
-# Set a URL to a contact page for DMCA requests
-docmost_environment_variable_docmost_footer_dmca_url: ''
-# Set a Sentry Client ID and DSN for error tracking
-docmost_environment_variable_sentry_client: ''
-docmost_environment_variable_sentry_dsn: ''
+# env.j2: Specify application's secret (minimum of 32 characters)
+# Generate a strong secret. You can create one with a command like `pwgen -s 64 1`.
+docmost_environment_variable_app_secret: YOUR_SECRET_KEY_HERE
 
-# env.j2: Upload and Download Limits
-#
-# Set the maximum upload file size in bytes (defaults to 2GB)
-docmost_environment_variable_max_file_size: 2147483648
-# Set the maximum number of files per archive
-docmost_environment_variable_max_files_per_archive: 64
-# Set the maximum upload expiry time in seconds (defaults to 7 days)
-docmost_environment_variable_max_expire_seconds: 604800
-# Set the maximum number of downloads
-docmost_environment_variable_max_downloads: 20
-# Set expiration time options to show on UI dropdown
-docmost_environment_variable_expire_times_seconds: 300, 3600, 86400, {{ docmost_environment_variable_max_expire_seconds }}
-# Set download limit options to show on UI dropdown
-docmost_environment_variable_download_counts: 1, 2, 3, 4, 5, {{ docmost_environment_variable_max_downloads }}
-# Set the default download limit displayed on UI
-docmost_environment_variable_default_downloads: '1'
-# Set the default expiration time displayed on UI
-docmost_environment_variable_default_expire_seconds: '86400'
+# env.j2: Specify expiration time for JSON Web Tokens (default: 30 days)
+docmost_environment_variable_jwt_token_expires_in: 30d
 
-# env.j2: Storage Backend Options
-#
-# Set a hostname, port, and pass of the Redis, KeyDB, or Valkey server
-docmost_environment_variable_redis_host: ''
-docmost_environment_variable_redis_port: 6379
-docmost_environment_variable_redis_user: ''
-docmost_environment_variable_redis_password: ''
-docmost_environment_variable_redis_db: ''
-# Set a directory for storage inside the Docker container
-docmost_environment_variable_file_dir: /uploads
-# Set a S3 bucket name to use
-docmost_environment_variable_S3_bucket: ''
-# Set a custom endpoint to use for S3 (defaults to AWS; set if using a S3 compatible storage like Wasabi and Storj)
-docmost_environment_variable_S3_endpoint: ''
-# Control whether to force path style URLs (https://docs.aws.amazon.com/AWSJavaScriptSDK/latest/AWS/Config.html#s3ForcePathStyle-property) for S3 objects
-docmost_environment_variable_S3_use_path_style_endpoint: false
+# env.j2: Speficy the database's URL
+docmost_environment_variable_database_url: "postgresql://postgres:password@localhost:5432/docmost?schema=public"
+
+# env.j2: Specify the username, password, hostname, port, and db number of the Redis, KeyDB, or Valkey server
+docmost_environment_variable_redis_url: "redis://username:password@host:port/db-number"
+
+# env.j2: Specify the storage backend option
+# Valid values: local, s3
+docmost_environment_variable_storage_driver: local
+
+# env.j2: Specify S3 driver configuration
 # Set a S3 access key ID
-docmost_environment_variable_aws_access_key_id: ''
+docmost_environment_variable_aws_s3_access_key_id: ''
 # Set a S3 secret access key ID
-docmost_environment_variable_aws_secret_access_key: ''
-# Set a Google Cloud Storage bucket
-docmost_environment_variable_gcs_bucket: ''
+docmost_environment_variable_aws_s3_secret_access_key: ''
+# Set the region where your S3 bucket is located
+docmost_environment_variable_aws_s3_region: ''
+# Set a S3 bucket name to use
+docmost_environment_variable_aws_s3_bucket: ''
+# The endpoint URL for your S3 service (optional; set if using a S3 compatible storage like Wasabi and Storj)
+docmost_environment_variable_aws_s3_endpoint: ''
+# Control whether to force path style URLs (https://docs.aws.amazon.com/AWSJavaScriptSDK/latest/AWS/Config.html#s3ForcePathStyle-property) for S3 objects
+docmost_environment_variable_aws_s3_force_path_style: false
+
+# env.j2: Specify the maximum uploaded file size (default: 50mb)
+docmost_environment_variable_file_upload_size_limit: '50mb'
+
+# env.j2: Specify the mailer's configuration
+# Valid values: smtp, postmark
+docmost_environment_variable_mail_driver: smtp
+docmost_environment_variable_mail_from_address: hello@example.com
+docmost_environment_variable_mail_from_name: docmost
+
+# env.j2: Specify SMTP driver configuration
+docmost_environment_variable_smtp_host: 127.0.0.1
+docmost_environment_variable_smtp_port: 587
+docmost_environment_variable_smtp_username: ''
+docmost_environment_variable_smtp_password: ''
+docmost_environment_variable_smtp_secure: false
+docmost_environment_variable_smtp_ignoretls: false
+
+# env.j2: Specify Postmark driver configuration
+docmost_environment_variable_postmark_token: ''
+
+# env.j2: Specify custom Draw.io server configuration
+# Example: https://embed.diagrams.net
+docmost_environment_variable_drawio_url: ''
+
+# env.j2: Control whether telemetry is disabled
+docmost_environment_variable_disable_telemetry: false
 
 # Additional environment variables.
-# See: https://github.com/timvisee/docmost/blob/master/server/config.js
+# See: https://docmost.com/docs/self-hosting/environment-variables
 docmost_environment_variables_additional_variables: ''

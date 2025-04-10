@@ -16,7 +16,7 @@
     - docmost_hostname
     - docmost_path_prefix
     - docmost_container_network
-    - docmost_environment_variable_redis_host
+    - docmost_environment_variable_redis_url
 
 - when: docmost_container_labels_traefik_enabled | bool
   block:
