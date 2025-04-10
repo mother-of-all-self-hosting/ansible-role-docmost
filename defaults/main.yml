@@ -206,6 +206,9 @@ docmost_environment_variable_aws_s3_force_path_style: false
 # env.j2: Specify the maximum uploaded file size (default: 50mb)
 docmost_environment_variable_file_upload_size_limit: '50mb'
 
+# env.j2: Control whether mailer is enabled
+docmost_mailer_enabled: false
+
 # env.j2: Specify the mailer's configuration
 # Valid values: smtp, postmark
 docmost_environment_variable_mail_driver: smtp
