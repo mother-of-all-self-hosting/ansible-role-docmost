@@ -169,11 +169,21 @@ docmost_environment_variable_app_secret: YOUR_SECRET_KEY_HERE
 # env.j2: Specify expiration time for JSON Web Tokens (default: 30 days)
 docmost_environment_variable_jwt_token_expires_in: 30d
 
-# env.j2: Speficy the database's URL
-docmost_environment_variable_database_url: "postgresql://postgres:password@localhost:5432/docmost?schema=public"
+# env.j2: Specify configuration for Postgres database server
+docmost_database_username: 'postgres'
+docmost_database_password: 'password'
+docmost_database_hostname: 'localhost'
+docmost_database_port: 5432
+docmost_database_name: 'docmost'
+docmost_environment_variable_database_url: "postgres://{{ docmost_database_username }}:{{ docmost_database_password }}@{{ docmost_database_hostname }}:{{ docmost_database_port }}/{{ docmost_database_name }}?schema=public"
 
-# env.j2: Specify the username, password, hostname, port, and db number of the Redis, KeyDB, or Valkey server
-docmost_environment_variable_redis_url: "redis://username:password@host:port/db-number"
+# env.j2: Specify configuration for Redis, KeyDB, or Valkey server
+docmost_redis_username: ''
+docmost_redis_password: ''
+docmost_redis_host: ''
+docmost_redis_port: 6379
+docmost_redis_dbnumber: ''
+docmost_environment_variable_redis_url: "redis://{{ docmost_redis_username }}:{{ docmost_redis_password }}@{{ docmost_redis_host }}:{{ docmost_redis_port }}/{{ docmost_redis_dbnumber }}"
 
 # env.j2: Specify the storage backend option
 # Valid values: local, s3
