@@ -195,44 +195,9 @@ If you use the MASH playbook, the shortcut commands with the [`just` program](ht
 
 ## Usage
 
-Docmost should be available at the specified hostname like `https://example.com`.
+After running the command for installation, Docmost becomes available at the specified hostname like `https://example.com`.
 
-It can be used via [CLI client](https://github.com/timvisee/ffdocmost). With the client you can upload a file specifying your host with `--host` option as below:
-
-```sh
-ffdocmost upload --host https://example.com YOUR_FILE_PATH_HERE
-```
-
-To download the file, you can use `ffdocmost download` command like below:
-
-```sh
-ffdocmost download https://example.com/#url-to-the-uploaded-file
-```
-
-See its [documentation](https://github.com/timvisee/ffdocmost/blob/master/README.md) for details about how to use the client.
-
-### Takedown illegal materials
-
-When a DMCA compliant was submitted or an abuse was detected, you need to remove the illegal material from the service. You can make the file inaccessible by following the steps below:
-
-1. Take a note of an ID of the file which needs to make inaccessible. The ID is contained in the URL. For example, if the URL is https://example.com/download/fa04ec7f8ce1bc05/#PhQ5XsSkKwcLfaODf9-K3B, the file ID is `fa04ec7f8ce1bc05`.
-2. Run a `DEL` command with the file ID from a host with access to the Redis server:
-
-   ```sh
-   redis-cli DEL fa04ec7f8ce1bc05
-   ```
-
-   If you run a Redis, KeyDB, or Valkey server on a Docker container along with the contaiener for Docmost on the same server, you can directly run the command with `docker exec`:
-
-   ```sh
-   docker exec -it YOUR_CONTAINER_FOR_REDIS_HERE sh -c "redis-cli DEL fa04ec7f8ce1bc05"
-   ```
-
-   Replace `YOUR_CONTAINER_FOR_REDIS_HERE` with the Docker container's name before running the command. For example, if you enable a [Valkey instance with the playbook](https://github.com/mother-of-all-self-hosting/mash-playbook/blob/main/docs/services/valkey.md) by the MASH project, it should be `mash-valkey` (if is a shared one) or `mash-docmost-valkey` (if it is a dedicated one).
-
-If the command returns `(integer) 1`, the record for the file has been removed, and the file has become inaccessible.
-
-Also see: https://github.com/docmost/docmost/blob/master/docs/takedowns.md
+To get started, go to the URL on a web browser and create a first workspace by inputting required information. For an email address, make sure to input your own email address, not the one specified to `docmost_environment_variable_mail_from_address`.
 
 ## Troubleshooting
 
