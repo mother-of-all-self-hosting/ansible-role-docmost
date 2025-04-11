@@ -82,15 +82,9 @@ Make sure to replace `YOUR_REDIS_SERVER_HOSTNAME_HERE` with the hostname of your
 
 ### Configure a storage backend
 
-The service provides these storage backend options: local filesystem (default), Amazon S3 compatible object storage, and Google Cloud Storage.
+The service provides these storage backend options: local filesystem (default) and Amazon S3 compatible object storage.
 
 #### Local filesystem (default)
-
-With the default configuration, the directory for storing files inside the Docker container is set to `/uploads`. You can change it by adding and adjusting the following configuration to your `vars.yml` file:
-
-```yaml
-docmost_environment_variable_file_dir: YOUR_DIRECTORY_HERE
-```
 
 **By default this role removes uploaded files when uninstalling the service**. In order to make those files persistent, you need to add a Docker volume to mount in the container, so that the directory for storing files is shared with the host machine.
 
@@ -107,74 +101,26 @@ Make sure permissions of the directory specified to `/path/on/the/host`.
 To use Amazon S3 or a S3 compatible object storage, add the following configuration to your `vars.yml` file (adapt to your needs):
 
 ```yaml
-docmost_environment_variable_storage_driver: s3compatible
-
-# Set a S3 bucket name to use
-docmost_environment_variable_S3_bucket: ''
-
-# Set a custom endpoint to use for S3 (defaults to AWS; set if using a S3 compatible storage like Wasabi and Storj)
-# docmost_environment_variable_S3_endpoint: ''
-
-# Control whether to force path style URLs (https://docs.aws.amazon.com/AWSJavaScriptSDK/latest/AWS/Config.html#s3ForcePathStyle-property) for S3 objects
-docmost_environment_variable_S3_use_path_style_endpoint: false
+docmost_environment_variable_storage_driver: s3
 
 # Set a S3 access key ID
-docmost_environment_variable_aws_access_key_id: ''
+docmost_environment_variable_aws_s3_access_key_id: ''
 
 # Set a S3 secret access key ID
-docmost_environment_variable_aws_secret_access_key: ''
+docmost_environment_variable_aws_s3_secret_access_key: ''
+
+# Set the the region where your S3 bucket is located
+docmost_environment_variable_aws_s3_region: ''
+
+# Set a S3 bucket name to use
+docmost_environment_variable_aws_s3_bucket: ''
+
+# The endpoint URL for your S3 service (optional; set if using a S3 compatible storage like Wasabi and Storj)
+docmost_environment_variable_aws_s3_endpoint: ''
+
+# Control whether to force path style URLs (https://docs.aws.amazon.com/AWSJavaScriptSDK/latest/AWS/Config.html#s3ForcePathStyle-property) for S3 objects
+docmost_environment_variable_aws_s3_force_path_style: false
 ```
-
-#### Google Cloud Storage
-
-To use Google Cloud Storage, add and adjust the following configuration to your `vars.yml` file:
-
-```yaml
-docmost_environment_variable_storage_driver: gcs
-
-# Set a Google Cloud Storage bucket
-docmost_environment_variable_gcs_bucket: ''
-```
-
-Before using it, authentication should be set up with [Application Default Credentials](https://cloud.google.com/docs/authentication/production#auth-cloud-implicit-nodejs).
-
-### Configure upload and download limits (optional)
-
-You can configure settings for uploading and downloading limits by adding the following configuration to your `vars.yml` file (adapt to your needs):
-
-```yaml
-# Set maximum upload file size to 1 GB (default: 2 GB, 2147483648 in bytes)
-docmost_environment_variable_max_file_size: 1073741824
-
-# Set maximum upload expiry time to 3 days (default: 7 days, 604800 seconds)
-docmost_environment_variable_max_expire_seconds: 259200
-
-# Set maximum number of downloads to 10 (default: 20)
-docmost_environment_variable_max_downloads: 10
-
-# Comma separated list of expire time options to show in UI dropdown (default: 300, 3600, 86400, 604800)
-docmost_environment_variable_expire_times_seconds: 300, 3600, 86400, {{ docmost_environment_variable_max_expire_seconds }}
-
-# Comma separated list of download limit options to show in UI dropdown (default: 1, 2, 3, 4, 5, 20)
-docmost_environment_variable_download_counts: 1, 2, 3, 4, 5, {{ docmost_environment_variable_max_downloads }}
-```
-
-> [!NOTE]
->
-> The developer recommends to take a precaution to mitigate the risk of your instance being used as a hosting service of illegal contents, such as setting a short expiration time and setting a URL for inquiry based on DMCA.
-
-> Long expiration times are risky on public servers as people may use you as free hosting for copyrighted content or malware (which is why Mozilla shut down their docmost service). It's advised to only expose your service on a LAN/intranet, password protect it with a proxy/gateway, or make sure to set SEND_FOOTER_DMCA_URL above so you can respond to takedown requests.
-
-<small>Source: [Docker Quickstart](https://github.com/docmost/docmost/blob/5124572dba7cac073d85f3e277d647aa3433ea38/docs/docker.md#environment-variables)</small>
-
-To set a URL to the contact page for DMCA requests, add the following configuration to your `vars.yml` file (adapt to your needs):
-
-```yaml
-# default: empty
-docmost_environment_variable_docmost_footer_dmca_url: ''
-```
-
-See [the section about usage](#takedown-illegal-materials) below to check how to takedown an illegal file from the service.
 
 ### Extending the configuration
 
