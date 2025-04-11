@@ -20,9 +20,9 @@ SPDX-License-Identifier: AGPL-3.0-or-later
 
 This is an [Ansible](https://www.ansible.com/) role which installs [Docmost](https://docmost.com/) to run as a [Docker](https://www.docker.com/) container wrapped in a systemd service.
 
-Docmost is a fork of Mozilla's discontinued [Firefox Docmost](https://github.com/mozilla/docmost) which allows you to send files to others with a link. Files are end-to-end encrypted so they cannot be read by the server, and also can be protected with a password.
+Docmost is an free and open-source collaborative wiki and documentation software, designed for seamless real-time collaboration. It can be used to manage a wiki, a knowledge base, project documentation, etc. It has various functions such as granular permissions management system, page history to track changes of articles, etc. It also supports diagramming tools like Draw.io, Excalidraw and Mermaid.
 
-See the project's [documentation](https://github.com/docmost/docmost/blob/master/README.md) to learn what Docmost does and why it might be useful to you.
+See the project's [documentation](https://docmost.com/docs/) to learn what Docmost does and why it might be useful to you.
 
 ## Prerequisites
 
