@@ -122,6 +122,57 @@ docmost_environment_variable_aws_s3_endpoint: ''
 docmost_environment_variable_aws_s3_force_path_style: false
 ```
 
+### Configure the mailer
+
+You can configure a mailer for functions such as user invitation. Docmost supports a SMTP server (default) and Postmark. To set it up, add the following common configuration and settings specific to SMTP server or Postmark to your `vars.yml` file as below (adapt to your needs):
+
+```yaml
+docmost_mailer_enabled: true
+
+# Set the email address that emails will be sent from
+docmost_environment_variable_mail_from_address: hello@example.com
+
+# Set the name that emails will be sent from
+docmost_environment_variable_mail_from_name: docmost
+```
+
+#### Use SMTP server (default)
+
+To use a SMTP server, add the following configuration to your `vars.yml` file:
+
+```yaml
+# Set the hostname of the SMTP server
+docmost_environment_variable_smtp_host: 127.0.0.1
+
+# Set the port to use for the SMTP server
+docmost_environment_variable_smtp_port: 587
+
+# Set the username for the SMTP server
+docmost_environment_variable_smtp_username: ''
+
+# Set the password for the SMTP server
+docmost_environment_variable_smtp_password: ''
+
+# Control whether TLS is used when connecting to the server
+docmost_environment_variable_smtp_secure: false
+
+# Control whether SSL errors are ignored
+docmost_environment_variable_smtp_ignoretls: false
+```
+
+⚠️ **Note**: without setting an authentication method such as DKIM, SPF, and DMARC for your hostname, emails are most likely to be quarantined as spam at recipient's mail servers. If you have set up a mail server with the [MASH project's exim-relay Ansible role](https://github.com/mother-of-all-self-hosting/ansible-role-exim-relay), you can enable DKIM signing with it. Refer [its documentation](https://github.com/mother-of-all-self-hosting/ansible-role-exim-relay/blob/main/docs/configuring-exim-relay.md#enable-dkim-support-optional) for details.
+
+#### Use Postmark
+
+To use Postmark, add the following configuration to your `vars.yml` file:
+
+```yaml
+docmost_environment_variable_mail_driver: postmark
+
+# Set the token for Postmark
+docmost_environment_variable_postmark_token: ''
+```
+
 ### Extending the configuration
 
 There are some additional things you may wish to configure about the component.
