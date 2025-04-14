@@ -14,6 +14,7 @@ docmost_enabled: true
 docmost_identifier: docmost
 docmost_base_path: "{{ docmost_identifier }}"
 
+# renovate: datasource=docker depName=docmost/docmost versioning=semver
 docmost_version: 0.10.1
 
 docmost_uid: ''
