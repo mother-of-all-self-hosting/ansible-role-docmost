@@ -54,7 +54,7 @@ docmost_enabled: true
 
 ### Set the hostname
 
-To enable the Docmost you need to set the hostname as well. To do so, add the following configuration to your `vars.yml` file. Make sure to replace `example.com` with your own value.
+To enable the Docmost instance you need to set the hostname as well. To do so, add the following configuration to your `vars.yml` file. Make sure to replace `example.com` with your own value.
 
 ```yaml
 docmost_hostname: "example.com"
