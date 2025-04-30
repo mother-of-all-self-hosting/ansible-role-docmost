@@ -32,7 +32,7 @@ ExecStartPre={{ devture_systemd_docker_base_host_command_docker }} create \
       --cap-drop=ALL \
       --network={{ docmost_container_network }} \
       {% if docmost_container_http_host_bind_port %}
-      -p {{ docmost_container_http_host_bind_port }}:{{ docmost_environment_variable_port }} \
+      -p {{ docmost_container_http_host_bind_port }}:{{ docmost_container_http_port }} \
       {% endif %}
       --env-file={{ docmost_base_path }}/env \
       --label-file={{ docmost_base_path }}/labels \

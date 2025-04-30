@@ -48,6 +48,9 @@ docmost_container_http_host_bind_port: ''
 # The base container network. It will be auto-created by this role if it doesn't exist already.
 docmost_container_network: "{{ docmost_identifier }}"
 
+# The port number in the container
+docmost_container_http_port: 3000
+
 # A list of additional container networks that the container would be connected to.
 # The role does not create these networks, so make sure they already exist.
 # Use this to expose this container to another reverse proxy, which runs in a different container network.
@@ -162,9 +165,8 @@ docmost_systemd_wanted_services_list: []
 # Specify the path for storing uploaded files on the host
 docmost_data_path: ''
 
-# env.j2: Specify application's URL and port
+# env.j2: Specify application's URL
 docmost_environment_variable_app_url: "{{ docmost_scheme }}://{{ docmost_hostname }}"
-docmost_environment_variable_port: 3000
 
 # env.j2: Specify application's secret (minimum of 32 characters)
 # Generate a strong secret. You can create one with a command like `pwgen -s 64 1`.
