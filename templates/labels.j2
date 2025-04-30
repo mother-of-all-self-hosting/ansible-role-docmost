@@ -46,7 +46,7 @@ traefik.http.routers.{{ docmost_identifier }}.tls={{ docmost_container_labels_tr
 traefik.http.routers.{{ docmost_identifier }}.tls.certResolver={{ docmost_container_labels_traefik_tls_certResolver }}
 {% endif %}
 
-traefik.http.services.{{ docmost_identifier }}.loadbalancer.server.port={{ docmost_environment_variable_port }}
+traefik.http.services.{{ docmost_identifier }}.loadbalancer.server.port={{ docmost_container_http_port }}
 {% endif %}
 
 {{ docmost_container_labels_additional_labels }}
