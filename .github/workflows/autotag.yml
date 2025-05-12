@@ -5,13 +5,13 @@
 ---
 name: Autotag dependency updates
 
-on:
+on:  # yamllint disable-line rule:truthy
   push:
     branches:
       - main
 
 permissions:
-  contents: write # required to push tags
+  contents: write  # required to push tags
   actions: read
 
 jobs:
