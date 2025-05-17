@@ -19,12 +19,12 @@
         enabled: false
         daemon_reload: true
 
-    - name: Ensure Docmost systemd service doesn't exist
+    - name: Ensure Docmost systemd service does not exist
       ansible.builtin.file:
         path: "{{ devture_systemd_docker_base_systemd_path }}/{{ docmost_identifier }}.service"
         state: absent
 
-    - name: Ensure Docmost base directory doesn't exist
+    - name: Ensure Docmost path does not exist
       ansible.builtin.file:
         path: "{{ docmost_base_path }}"
         state: absent
