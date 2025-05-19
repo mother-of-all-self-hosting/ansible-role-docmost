@@ -5,11 +5,14 @@
 
 ---
 
-- block:
-    - when: docmost_enabled | bool
+- name: Perform Docmost installation tasks
+  block:
+    - name: Validate Docmost configuration
+      when: docmost_enabled | bool
       ansible.builtin.include_tasks: "{{ role_path }}/tasks/validate_config.yml"
 
-    - when: docmost_enabled | bool
+    - name: Install Docmost
+      when: docmost_enabled | bool
       ansible.builtin.include_tasks: "{{ role_path }}/tasks/install.yml"
   tags:
     - setup-all
@@ -17,8 +20,10 @@
     - install-all
     - install-docmost
 
-- block:
-    - when: not docmost_enabled | bool
+- name: Perform Docmost uninstallation tasks
+  block:
+    - name: Uninstall Docmost
+      when: not docmost_enabled | bool
       ansible.builtin.include_tasks: "{{ role_path }}/tasks/uninstall.yml"
   tags:
     - setup-all
