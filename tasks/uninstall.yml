@@ -9,7 +9,7 @@
     path: "{{ devture_systemd_docker_base_systemd_path }}/{{ docmost_identifier }}.service"
   register: docmost_service_stat
 
-- name: Run Docmost uninstallation tasks
+- name: Uninstall Docmost systemd services and files
   when: docmost_service_stat.stat.exists | bool
   block:
     - name: Ensure Docmost systemd service is stopped

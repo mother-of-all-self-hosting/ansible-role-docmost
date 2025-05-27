@@ -10,12 +10,10 @@
     - setup-docmost
     - install-all
     - install-docmost
-
   block:
     - name: Validate Docmost configuration
       when: docmost_enabled | bool
       ansible.builtin.include_tasks: "{{ role_path }}/tasks/validate_config.yml"
-
     - name: Install Docmost
       when: docmost_enabled | bool
       ansible.builtin.include_tasks: "{{ role_path }}/tasks/install.yml"
