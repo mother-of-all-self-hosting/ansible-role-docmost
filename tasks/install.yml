@@ -59,6 +59,7 @@
         version: "{{ docmost_container_repo_version }}"
         dest: "{{ docmost_container_src_files_path }}"
         force: "yes"
+        recursive: false # do not init/update any submodules including `apps/server/src/ee`
       register: docmost_git_pull_results
 
     - name: Ensure Docmost container image is built
