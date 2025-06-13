@@ -55,22 +55,22 @@
   block:
     - name: Ensure Docmost repository is present on self-build
       ansible.builtin.git:
-        repo: "{{ docmost_container_repo }}"
-        version: "{{ docmost_container_repo_version }}"
-        dest: "{{ docmost_container_src_files_path }}"
+        repo: "{{ docmost_container_image_self_build_repo }}"
+        version: "{{ docmost_container_image_self_build_repo_version }}"
+        dest: "{{ docmost_container_image_self_build_src_files_path }}"
         force: "yes"
         recursive: false # do not init/update any submodules including `apps/server/src/ee`
       register: docmost_git_pull_results
 
     - name: Ensure Docmost container image is built
       community.docker.docker_image:
-        name: "{{ docmost_container_image_name }}"
+        name: "{{ docmost_container_image_self_build_name }}"
         source: build
         force_source: "{{ docmost_git_pull_results.changed if ansible_version.major > 2 or ansible_version.minor >= 8 else omit }}"
         force: "{{ omit if ansible_version.major > 2 or ansible_version.minor >= 8 else docmost_git_pull_results.changed }}"
         build:
           dockerfile: Dockerfile
-          path: "{{ docmost_container_src_files_path }}"
+          path: "{{ docmost_container_image_self_build_src_files_path }}"
           pull: true
           args:
 
