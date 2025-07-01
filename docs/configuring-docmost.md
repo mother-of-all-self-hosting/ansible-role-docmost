@@ -181,7 +181,7 @@ Take a look at:
 
 - [`defaults/main.yml`](../defaults/main.yml) for some variables that you can customize via your `vars.yml` file. You can override settings (even those that don't have dedicated playbook variables) using the `docmost_environment_variables_additional_variables` variable
 
-For a complete list of Docmost's config options that you could put in `docmost_environment_variables_additional_variables`, see its [environment variables](https://docmost.com/docs/self-hosting/environment-variables).
+See its [environment variables](https://docmost.com/docs/self-hosting/environment-variables) for a complete list of Docmost's config options that you could put in `docmost_environment_variables_additional_variables`.
 
 ## Installing
 
