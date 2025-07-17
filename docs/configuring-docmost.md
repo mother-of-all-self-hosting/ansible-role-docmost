@@ -26,9 +26,9 @@ See the project's [documentation](https://docmost.com/docs/) to learn what Docmo
 
 ## Prerequisites
 
-To run a Docmost instance it is necessary to prepare a [Redis](https://redis.io/) server for managing a metadata database.
+To run a Docmost instance it is necessary to prepare a [Postgres](https://redis.io/) database server and [Redis](https://redis.io/) server for managing a metadata database.
 
-If you are looking for an Ansible role for Redis, you can check out [this role (ansible-role-redis)](https://github.com/mother-of-all-self-hosting/ansible-role-redis) maintained by the [Mother-of-All-Self-Hosting (MASH)](https://github.com/mother-of-all-self-hosting) team. Note that the team recommends to have a look at [this role (ansible-role-valkey)](https://github.com/mother-of-all-self-hosting/ansible-role-valkey) for [Valkey](https://valkey.io/) instead.
+If you are looking for Ansible roles for them, you can check out [ansible-role-postgres](https://github.com/mother-of-all-self-hosting/ansible-role-postgres) and [ansible-role-redis](https://github.com/mother-of-all-self-hosting/ansible-role-redis), both of which are maintained by the [Mother-of-All-Self-Hosting (MASH)](https://github.com/mother-of-all-self-hosting) team. Note that the team recommends to have a look at [this role (ansible-role-valkey)](https://github.com/mother-of-all-self-hosting/ansible-role-valkey) for [Valkey](https://valkey.io/) instead.
 
 ## Adjusting the playbook configuration
 
