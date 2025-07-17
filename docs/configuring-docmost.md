@@ -84,18 +84,6 @@ Make sure to replace `YOUR_REDIS_SERVER_HOSTNAME_HERE` with the hostname of your
 
 The service provides these storage backend options: local filesystem (default) and Amazon S3 compatible object storage.
 
-#### Local filesystem (default)
-
-**By default this role removes uploaded files when uninstalling the service**. In order to make those files persistent, you need to add a Docker volume to mount in the container, so that the directory for storing files is shared with the host machine.
-
-To add the volume, prepare a directory on the host machine and add the following configuration to your `vars.yml` file:
-
-```yaml
-docmost_data_path: /path/on/the/host
-```
-
-Make sure permissions of the directory specified to `/path/on/the/host`.
-
 #### Amazon S3 compatible object storage
 
 To use Amazon S3 or a S3 compatible object storage, add the following configuration to your `vars.yml` file (adapt to your needs):

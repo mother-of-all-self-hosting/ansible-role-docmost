@@ -4,7 +4,7 @@
 # SPDX-License-Identifier: AGPL-3.0-or-later
 
 ---
-- name: Ensure Docmost path exists
+- name: Ensure Docmost paths exist
   ansible.builtin.file:
     path: "{{ item }}"
     state: directory
@@ -13,6 +13,7 @@
     group: "{{ docmost_gid }}"
   with_items:
     - "{{ docmost_base_path }}"
+    - "{{ docmost_data_path }}"
 
 - name: Ensure Docmost support files installed
   ansible.builtin.template:

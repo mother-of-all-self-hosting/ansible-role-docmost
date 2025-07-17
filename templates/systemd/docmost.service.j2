@@ -35,7 +35,7 @@ ExecStartPre={{ devture_systemd_docker_base_host_command_docker }} create \
       {% endif %}
       --env-file={{ docmost_base_path }}/env \
       --label-file={{ docmost_base_path }}/labels \
-      {% if docmost_data_path %}
+      {% if docmost_container_additional_volumes | length == 0 %}
       --mount type=bind,src={{ docmost_data_path }},dst=/app/data/storage \
       {% endif %}
       {% for volume in docmost_container_additional_volumes %}
