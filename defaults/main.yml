@@ -87,6 +87,12 @@ docmost_container_labels_traefik_entrypoints: web-secure
 docmost_container_labels_traefik_tls: "{{ docmost_container_labels_traefik_entrypoints != 'web' }}"
 docmost_container_labels_traefik_tls_certResolver: default  # noqa var-naming
 
+# Controls which additional headers to attach to all HTTP requests.
+# To add your own custom request headers, use `docmost_container_labels_traefik_additional_request_headers_custom`
+docmost_container_labels_traefik_additional_request_headers: "{{ docmost_container_labels_traefik_additional_request_headers_auto | combine(docmost_container_labels_traefik_additional_request_headers_custom) }}"
+docmost_container_labels_traefik_additional_request_headers_auto: {}
+docmost_container_labels_traefik_additional_request_headers_custom: {}
+
 # Controls which additional headers to attach to all HTTP responses.
 # To add your own custom response headers, use `docmost_container_labels_traefik_additional_response_headers_custom`
 docmost_container_labels_traefik_additional_response_headers: "{{ docmost_container_labels_traefik_additional_response_headers_auto | combine(docmost_container_labels_traefik_additional_response_headers_custom) }}"
