@@ -15,7 +15,7 @@ traefik.docker.network={{ docmost_container_labels_traefik_docker_network }}
 {% set middlewares = [] %}
 
 {% if docmost_container_labels_traefik_path_prefix != '/' %}
-traefik.http.middlewares.{{ docmost_identifier }}-slashless-redirect.redirectregex.regex=({{ docmost_container_labels_traefik_path_prefix | quote }})$
+traefik.http.middlewares.{{ docmost_identifier }}-slashless-redirect.redirectregex.regex=^({{ docmost_container_labels_traefik_path_prefix | quote }})$
 traefik.http.middlewares.{{ docmost_identifier }}-slashless-redirect.redirectregex.replacement=${1}/
 {% set middlewares = middlewares + [docmost_identifier + '-slashless-redirect'] %}
 {% endif %}
