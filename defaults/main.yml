@@ -188,10 +188,10 @@ docmost_environment_variable_app_secret: YOUR_SECRET_KEY_HERE
 docmost_environment_variable_jwt_token_expires_in: 30d
 
 # env.j2: Specify configuration for Postgres database server
-docmost_database_username: "postgres"
-docmost_database_password: "password"
 docmost_database_hostname: "localhost"
 docmost_database_port: 5432
+docmost_database_username: "postgres"
+docmost_database_password: "password"
 docmost_database_name: "docmost"
 docmost_environment_variable_database_url: "postgres://{{ docmost_database_username }}:{{ docmost_database_password }}@{{ docmost_database_hostname }}:{{ docmost_database_port }}/{{ docmost_database_name }}?schema=public"
 
