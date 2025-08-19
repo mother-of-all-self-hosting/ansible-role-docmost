@@ -198,10 +198,10 @@ docmost_environment_variable_database_url: "postgres://{{ docmost_database_usern
 # env.j2: Specify configuration for Redis, KeyDB, or Valkey server
 docmost_redis_username: ""
 docmost_redis_password: ""
-docmost_redis_host: ""
+docmost_redis_hostname: ""
 docmost_redis_port: 6379
 docmost_redis_dbnumber: ""
-docmost_environment_variable_redis_url: "redis://{{ docmost_redis_username }}:{{ docmost_redis_password }}@{{ docmost_redis_host }}:{{ docmost_redis_port }}/{{ docmost_redis_dbnumber }}"
+docmost_environment_variable_redis_url: "redis://{{ docmost_redis_username }}:{{ docmost_redis_password }}@{{ docmost_redis_hostname }}:{{ docmost_redis_port }}/{{ docmost_redis_dbnumber }}"
 
 # env.j2: Specify the storage backend option
 # Valid values: local, s3

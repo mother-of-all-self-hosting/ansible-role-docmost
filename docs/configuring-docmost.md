@@ -73,7 +73,7 @@ Having configured it, you need to add and adjust the following configuration to 
 ```yaml
 docmost_redis_username: ''
 docmost_redis_password: ''
-docmost_redis_host: YOUR_REDIS_SERVER_HOSTNAME_HERE
+docmost_redis_hostname: YOUR_REDIS_SERVER_HOSTNAME_HERE
 docmost_redis_port: 6379
 docmost_redis_dbnumber: ''
 ```

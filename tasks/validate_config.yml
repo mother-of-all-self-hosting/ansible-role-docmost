@@ -12,6 +12,7 @@
   when: "lookup('ansible.builtin.varnames', ('^' + item.old + '$'), wantlist=True) | length > 0"
   with_items:
     - { "old": "docmost_environment_variable_port", "new": "docmost_container_http_port" }
+    - { "old": "docmost_redis_host", "new": "docmost_redis_hostname" }
 
 - name: Fail if required Docmost settings not defined
   ansible.builtin.fail:
