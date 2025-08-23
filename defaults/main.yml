@@ -175,7 +175,10 @@ docmost_systemd_required_services_list_auto: []
 docmost_systemd_required_services_list_custom: []
 
 # List of systemd services that the Docmost systemd service wants
-docmost_systemd_wanted_services_list: []
+docmost_systemd_wanted_services_list: "{{ docmost_systemd_wanted_services_list_default + docmost_systemd_wanted_services_list_auto + docmost_systemd_wanted_services_list_custom }}"
+docmost_systemd_wanted_services_list_default: []
+docmost_systemd_wanted_services_list_auto: []
+docmost_systemd_wanted_services_list_custom: []
 
 # env.j2: Specify application's URL
 docmost_environment_variable_app_url: "{{ docmost_scheme }}://{{ docmost_hostname }}"
