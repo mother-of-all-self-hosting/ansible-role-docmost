@@ -30,6 +30,18 @@
     - docmost_database_password
     - docmost_environment_variable_redis_url
 
+- name: Fail if Docmost storage drver option is invalid
+  ansible.builtin.fail:
+    msg: >-
+      docmost_environment_variable_storage_driver must be 'local' or 's3'
+  when: "docmost_environment_variable_storage_driver not in ['local', 's3']"
+
+- name: Fail if Docmost mail driver option is invalid
+  ansible.builtin.fail:
+    msg: >-
+      docmost_environment_variable_mail_driver must be 'smtp' or 'postmark'
+  when: "docmost_environment_variable_mail_driver not in ['smtp', 'postmark']"
+
 - name: Fail if mailer setting is missing
   ansible.builtin.fail:
     msg: >-
