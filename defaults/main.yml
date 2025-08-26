@@ -234,13 +234,13 @@ docmost_mailer_enabled: false
 # Valid values: smtp, postmark
 docmost_environment_variable_mail_driver: smtp
 # Set the email address that emails will be sent from
-docmost_environment_variable_mail_from_address: hello@example.com
+docmost_environment_variable_mail_from_address: ''
 # Set the name that emails will be sent from
 docmost_environment_variable_mail_from_name: docmost
 
 # env.j2: Specify SMTP driver configuration
 # Set the hostname of the SMTP server
-docmost_environment_variable_smtp_host: 127.0.0.1
+docmost_environment_variable_smtp_host: ''
 # Set the port to use for the SMTP server
 docmost_environment_variable_smtp_port: 587
 # Set the username for the SMTP server
