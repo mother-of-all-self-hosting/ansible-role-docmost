@@ -1,3 +1,4 @@
+# SPDX-FileCopyrightText: 2023 Julian-Samuel Gebühr
 # SPDX-FileCopyrightText: 2023 - 2025 Slavi Pantaleev
 # SPDX-FileCopyrightText: 2025 Suguru Hirahara
 #
@@ -28,6 +29,16 @@
     - docmost_database_hostname
     - docmost_database_password
     - docmost_environment_variable_redis_url
+
+- name: Fail if SMTP settings are missing (and SMTP is enabled by setting host)
+  ansible.builtin.fail:
+    msg: >-
+      You need to define a required configuration setting (`{{ item }}`) to correctly set up email via SMTP.
+  when: "docmost_mailer_enabled | bool and docmost_environment_variable_mail_driver == 'smtp' and lookup('vars', item, default='') | string | length == 0"
+  with_items:
+    - docmost_environment_variable_smtp_host
+    - docmost_environment_variable_smtp_port
+    - docmost_environment_variable_mail_from_address
 
 - name: Run if Traefik is enabled
   when: docmost_container_labels_traefik_enabled | bool
