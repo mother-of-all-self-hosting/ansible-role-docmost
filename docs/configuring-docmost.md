@@ -71,11 +71,11 @@ As described above, it is necessary to set up a [Redis](https://redis.io/) serve
 Having configured it, you need to add and adjust the following configuration to your `vars.yml` file, so that the Docmost instance will connect to the server:
 
 ```yaml
-docmost_redis_username: ''
-docmost_redis_password: ''
+docmost_redis_username: ""
+docmost_redis_password: ""
 docmost_redis_hostname: YOUR_REDIS_SERVER_HOSTNAME_HERE
 docmost_redis_port: 6379
-docmost_redis_dbnumber: ''
+docmost_redis_dbnumber: ""
 ```
 
 Make sure to replace `YOUR_REDIS_SERVER_HOSTNAME_HERE` with the hostname of your Redis server. If the Redis server runs on the same host as Docmost, set `localhost`.
@@ -92,19 +92,19 @@ To use Amazon S3 or a S3 compatible object storage, add the following configurat
 docmost_environment_variable_storage_driver: s3
 
 # Set a S3 access key ID
-docmost_environment_variable_aws_s3_access_key_id: ''
+docmost_environment_variable_aws_s3_access_key_id: ""
 
 # Set a S3 secret access key ID
-docmost_environment_variable_aws_s3_secret_access_key: ''
+docmost_environment_variable_aws_s3_secret_access_key: ""
 
 # Set the the region where your S3 bucket is located
-docmost_environment_variable_aws_s3_region: ''
+docmost_environment_variable_aws_s3_region: ""
 
 # Set a S3 bucket name to use
-docmost_environment_variable_aws_s3_bucket: ''
+docmost_environment_variable_aws_s3_bucket: ""
 
 # The endpoint URL for your S3 service (optional; set if using a S3 compatible storage like Wasabi and Storj)
-docmost_environment_variable_aws_s3_endpoint: ''
+docmost_environment_variable_aws_s3_endpoint: ""
 
 # Control whether to force path style URLs (https://docs.aws.amazon.com/AWSJavaScriptSDK/latest/AWS/Config.html#s3ForcePathStyle-property) for S3 objects
 docmost_environment_variable_aws_s3_force_path_style: false
@@ -136,10 +136,10 @@ docmost_environment_variable_smtp_host: 127.0.0.1
 docmost_environment_variable_smtp_port: 587
 
 # Set the username for the SMTP server
-docmost_environment_variable_smtp_username: ''
+docmost_environment_variable_smtp_username: ""
 
 # Set the password for the SMTP server
-docmost_environment_variable_smtp_password: ''
+docmost_environment_variable_smtp_password: ""
 
 # Control whether TLS is used when connecting to the server
 docmost_environment_variable_smtp_secure: false
@@ -159,7 +159,7 @@ To use Postmark, add the following configuration to your `vars.yml` file:
 docmost_environment_variable_mail_driver: postmark
 
 # Set the token for Postmark
-docmost_environment_variable_postmark_token: ''
+docmost_environment_variable_postmark_token: ""
 ```
 
 ### Extending the configuration
