@@ -97,7 +97,7 @@ docmost_environment_variable_aws_s3_access_key_id: ""
 # Set a S3 secret access key ID
 docmost_environment_variable_aws_s3_secret_access_key: ""
 
-# Set the the region where your S3 bucket is located
+# Set the region where your S3 bucket is located
 docmost_environment_variable_aws_s3_region: ""
 
 # Set a S3 bucket name to use
