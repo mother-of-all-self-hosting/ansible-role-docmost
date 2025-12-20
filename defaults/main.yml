@@ -111,9 +111,10 @@ docmost_container_labels_traefik_additional_response_headers_custom: {}
 
 # docmost_container_labels_additional_labels contains a multiline string with additional labels to add to the container label file.
 # See `../templates/labels.j2` for details.
+# To add your own custom labels, use `docmost_container_labels_additional_labels_custom`
 #
 # Example:
-# docmost_container_labels_additional_labels: |
+# docmost_container_labels_additional_labels_custom: |
 #   my.label=1
 #   another.label="here"
 docmost_container_labels_additional_labels: "{{ docmost_container_labels_additional_labels_auto | combine(docmost_container_labels_additional_labels_custom) }}"
