@@ -180,16 +180,6 @@ docmost_systemd_wanted_services_list_default: []
 docmost_systemd_wanted_services_list_auto: []
 docmost_systemd_wanted_services_list_custom: []
 
-# env.j2: Specify application's URL
-docmost_environment_variable_app_url: "{{ docmost_scheme }}://{{ docmost_hostname }}"
-
-# env.j2: Specify application's secret (minimum of 32 characters)
-# Generate a strong secret. You can create one with a command like `pwgen -s 64 1`.
-docmost_environment_variable_app_secret: YOUR_SECRET_KEY_HERE
-
-# env.j2: Specify expiration time for JSON Web Tokens (default: 30 days)
-docmost_environment_variable_jwt_token_expires_in: 30d
-
 # env.j2: Specify configuration for Postgres database server
 docmost_database_hostname: ""
 docmost_database_port: 5432
@@ -205,6 +195,19 @@ docmost_redis_hostname: ""
 docmost_redis_port: 6379
 docmost_redis_dbnumber: ""
 docmost_environment_variable_redis_url: "redis://{{ docmost_redis_username }}:{{ docmost_redis_password }}@{{ docmost_redis_hostname }}:{{ docmost_redis_port }}/{{ docmost_redis_dbnumber }}"
+
+# Specify the timezone
+docmost_environment_variables_tz: UTC
+
+# env.j2: Specify application's URL
+docmost_environment_variable_app_url: "{{ docmost_scheme }}://{{ docmost_hostname }}"
+
+# env.j2: Specify application's secret (minimum of 32 characters)
+# Generate a strong secret. You can create one with a command like `pwgen -s 64 1`.
+docmost_environment_variable_app_secret: YOUR_SECRET_KEY_HERE
+
+# env.j2: Specify expiration time for JSON Web Tokens (default: 30 days)
+docmost_environment_variable_jwt_token_expires_in: 30d
 
 # env.j2: Specify the storage backend option
 # Valid values: local, s3
