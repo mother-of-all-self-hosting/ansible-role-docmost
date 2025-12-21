@@ -27,7 +27,7 @@ docmost_hostname: ""
 # Specify URI scheme for docmost_environment_variable_app_url.
 docmost_scheme: https
 
-# The path at which Docmost is exposed.
+# The path at which Docmost is served.
 # This value must either be `/` or not end with a slash (e.g. `/docmost`).
 #
 # Hosting Docmost under a subpath does not seem to be possible due to Docmost's
