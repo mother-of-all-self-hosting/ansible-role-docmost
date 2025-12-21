@@ -121,7 +121,7 @@ docmost_container_labels_additional_labels: "{{ docmost_container_labels_additio
 docmost_container_labels_additional_labels_auto: {}
 docmost_container_labels_additional_labels_custom: {}
 
-# A list of extra arguments to pass to the container (`docker run` command)
+# A list of extra arguments to pass to the container (`docker create` command)
 docmost_container_extra_arguments: "{{ docmost_container_extra_arguments_auto + docmost_container_extra_arguments_custom }}"
 docmost_container_extra_arguments_auto: []
 docmost_container_extra_arguments_custom: []
