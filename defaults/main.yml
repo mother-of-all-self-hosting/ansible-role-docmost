@@ -77,7 +77,7 @@ docmost_container_additional_volumes_custom: []
 # docmost_container_labels_traefik_enabled controls whether labels to assist a Traefik reverse-proxy will be attached to the container.
 # See `../templates/labels.j2` for details.
 #
-# To inject your own other container labels, see `docmost_container_labels_additional_labels`.
+# To inject your own other container labels, see `docmost_container_labels_additional_labels_custom`.
 docmost_container_labels_traefik_enabled: true
 docmost_container_labels_traefik_docker_network: "{{ docmost_container_network }}"
 docmost_container_labels_traefik_hostname: "{{ docmost_hostname }}"
