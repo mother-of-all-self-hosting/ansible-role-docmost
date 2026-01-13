@@ -21,11 +21,11 @@ docmost_version: 0.24.1
 docmost_uid: ""
 docmost_gid: ""
 
+# The scheme used for serving Docmost.
+docmost_scheme: https
+
 # The hostname at which Docmost is served.
 docmost_hostname: ""
-
-# Specify URI scheme for docmost_environment_variable_app_url.
-docmost_scheme: https
 
 # The path at which Docmost is served.
 # This value must either be `/` or not end with a slash (e.g. `/docmost`).
@@ -47,7 +47,7 @@ docmost_container_image_self_build_repo: "https://github.com/docmost/docmost.git
 docmost_container_image_self_build_repo_version: "{{ 'v' + docmost_version if docmost_version != 'latest' else 'main' }}"
 docmost_container_image_self_build_src_files_path: "{{ docmost_base_path }}/docker-src"
 
-# Controls whether the container exposes its HTTP port (tcp/80 in the container).
+# Controls whether the container exposes its HTTP port (tcp/3000 in the container).
 #
 # Takes an "<ip>:<port>" or "<port>" value (e.g. "127.0.0.1:2586"), or empty string to not expose.
 docmost_container_http_host_bind_port: ""
