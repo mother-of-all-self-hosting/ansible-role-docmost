@@ -16,7 +16,7 @@ docmost_base_path: "/{{ docmost_identifier }}"
 docmost_data_path: "{{ docmost_base_path }}/data"
 
 # renovate: datasource=docker depName=docmost/docmost versioning=semver
-docmost_version: 0.24.1
+docmost_version: 0.25.0
 
 docmost_uid: ""
 docmost_gid: ""
