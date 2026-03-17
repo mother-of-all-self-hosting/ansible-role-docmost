@@ -241,9 +241,9 @@ docmost_environment_variables_tz: UTC
 # env.j2: Specify application's URL
 docmost_environment_variable_app_url: "{{ docmost_scheme }}://{{ docmost_hostname }}"
 
-# env.j2: Specify application's secret (minimum of 32 characters)
-# Generate a strong secret. You can create one with a command like `pwgen -s 64 1`.
-docmost_environment_variable_app_secret: YOUR_SECRET_KEY_HERE
+# Specify an application's secret (minimum of 32 characters)
+# generated with `pwgen -s 64 1` or in another way.
+docmost_environment_variable_app_secret: ""
 
 # env.j2: Specify expiration time for JSON Web Tokens (default: 30 days)
 docmost_environment_variable_jwt_token_expires_in: 30d

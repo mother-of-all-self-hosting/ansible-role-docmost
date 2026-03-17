@@ -29,6 +29,7 @@
     - docmost_container_network
     - docmost_database_hostname
     - docmost_database_password
+    - docmost_environment_variable_app_secret
     - docmost_environment_variable_redis_url
 
 - name: Fail if Docmost storage drver option is invalid
