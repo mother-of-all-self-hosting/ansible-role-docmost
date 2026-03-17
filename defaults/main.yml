@@ -219,7 +219,7 @@ docmost_container_cleanup_command: |
   echo "Failed to remove stale container {{ docmost_identifier }} after {{ docmost_container_cleanup_timeout_seconds }} attempts" >&2;
   exit 1
 
-# env.j2: Specify configuration for Postgres database server
+# Specify database configuration
 docmost_database_hostname: ""
 docmost_database_port: 5432
 docmost_database_username: "postgres"
@@ -227,7 +227,7 @@ docmost_database_password: ""
 docmost_database_name: "docmost"
 docmost_environment_variable_database_url: "postgres://{{ docmost_database_username }}:{{ docmost_database_password }}@{{ docmost_database_hostname }}:{{ docmost_database_port }}/{{ docmost_database_name }}?schema=public"
 
-# env.j2: Specify configuration for Redis, KeyDB, or Valkey server
+# Specify Redis configuration
 docmost_redis_username: ""
 docmost_redis_password: ""
 docmost_redis_hostname: ""
@@ -238,70 +238,58 @@ docmost_environment_variable_redis_url: "redis://{{ docmost_redis_username }}:{{
 # Specify the timezone
 docmost_environment_variables_tz: UTC
 
-# env.j2: Specify application's URL
+# Specify application's URL
 docmost_environment_variable_app_url: "{{ docmost_scheme }}://{{ docmost_hostname }}"
 
 # Specify an application's secret (minimum of 32 characters)
 # generated with `pwgen -s 64 1` or in another way.
 docmost_environment_variable_app_secret: ""
 
-# env.j2: Specify expiration time for JSON Web Tokens (default: 30 days)
+# Specify expiration time for JSON Web Tokens (default: 30 days)
 docmost_environment_variable_jwt_token_expires_in: 30d
 
-# env.j2: Specify the storage backend option
+# Specify the storage backend option
 # Valid values: local, s3
 docmost_environment_variable_storage_driver: local
 
-# env.j2: Specify S3 driver configuration
-# Set a S3 access key ID
+# Specify S3 driver configuration
 docmost_environment_variable_aws_s3_access_key_id: ""
-# Set a S3 secret access key ID
 docmost_environment_variable_aws_s3_secret_access_key: ""
-# Set the region where your S3 bucket is located
 docmost_environment_variable_aws_s3_region: ""
-# Set a S3 bucket name to use
 docmost_environment_variable_aws_s3_bucket: ""
-# The endpoint URL for your S3 service (optional; set if using a S3 compatible storage like Wasabi and Storj)
 docmost_environment_variable_aws_s3_endpoint: ""
-# Control whether to force path style URLs (https://docs.aws.amazon.com/AWSJavaScriptSDK/latest/AWS/Config.html#s3ForcePathStyle-property) for S3 objects
 docmost_environment_variable_aws_s3_force_path_style: false
 
-# env.j2: Specify the maximum uploaded file size (default: 50mb)
+# Specify the maximum uploaded file size (default: 50mb)
 docmost_environment_variable_file_upload_size_limit: "50mb"
 
-# env.j2: Control whether mailer is enabled
+# Control whether mailer is enabled
 docmost_mailer_enabled: false
 
-# env.j2: Specify the mailer's configuration
+# Specify the mailer's configuration
 # Valid values: smtp, postmark
 docmost_environment_variable_mail_driver: smtp
+
 # Set the email address that emails will be sent from
 docmost_environment_variable_mail_from_address: ""
-# Set the name that emails will be sent from
 docmost_environment_variable_mail_from_name: docmost
 
-# env.j2: Specify SMTP driver configuration
-# Set the hostname of the SMTP server
+# Specify SMTP driver configuration
 docmost_environment_variable_smtp_host: ""
-# Set the port to use for the SMTP server
 docmost_environment_variable_smtp_port: 587
-# Set the username for the SMTP server
 docmost_environment_variable_smtp_username: ""
-# Set the password for the SMTP server
 docmost_environment_variable_smtp_password: ""
-# Control whether TLS is used when connecting to the server
 docmost_environment_variable_smtp_secure: false
-# Control whether SSL errors are ignored
 docmost_environment_variable_smtp_ignoretls: false
 
-# env.j2: Specify Postmark driver configuration
+# Specify Postmark driver configuration
 docmost_environment_variable_postmark_token: ""
 
-# env.j2: Specify custom Draw.io server configuration
+# Specify custom Draw.io server configuration
 # Example: https://embed.diagrams.net
 docmost_environment_variable_drawio_url: ""
 
-# env.j2: Control whether telemetry is disabled
+# Control if telemetry is disabled
 docmost_environment_variable_disable_telemetry: false
 
 # Additional environment variables.
