@@ -224,8 +224,12 @@ docmost_database_hostname: ""
 docmost_database_port: 5432
 docmost_database_username: "postgres"
 docmost_database_password: ""
+# Specify SSL mode for Postgres database server
+# By default, we expect a local container (without SSL), so attempting SSL connections is not necessary.
+# Valid values: see https://www.postgresql.org/docs/11/libpq-ssl.html#LIBPQ-SSL-SSLMODE-STATEMENTS
+docmost_database_sslmode: disable
 docmost_database_name: "docmost"
-docmost_environment_variable_database_url: "postgres://{{ docmost_database_username }}:{{ docmost_database_password }}@{{ docmost_database_hostname }}:{{ docmost_database_port }}/{{ docmost_database_name }}?schema=public"
+docmost_environment_variable_database_url: "postgres://{{ docmost_database_username }}:{{ docmost_database_password }}@{{ docmost_database_hostname }}:{{ docmost_database_port }}/{{ docmost_database_name }}?schema=public&sslmode={{ docmost_database_sslmode }}"
 
 # Specify Redis configuration
 docmost_redis_username: ""
