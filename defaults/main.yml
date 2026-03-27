@@ -294,7 +294,7 @@ docmost_environment_variable_postmark_token: ""
 docmost_environment_variable_drawio_url: ""
 
 # Control if telemetry is disabled
-docmost_environment_variable_disable_telemetry: false
+docmost_environment_variable_disable_telemetry: true
 
 # Additional environment variables.
 # See: https://docmost.com/docs/self-hosting/environment-variables
