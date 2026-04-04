@@ -70,8 +70,6 @@ It is necessary to set up a [Redis](https://redis.io/) database for the Docmost 
 
 To enable the Redis database for Docmost, add the following configuration to your `vars.yml` file:
 
-To enable the Redis database for Bar Assistant server, add the following configuration to your `vars.yml` file:
-
 ```yaml
 docmost_redis_username: ""
 docmost_redis_password: ""
