@@ -26,7 +26,7 @@ See the project's [documentation](https://docmost.com/docs/) to learn what Docmo
 
 ## Prerequisites
 
-To run a Docmost instance it is necessary to prepare a [Postgres](https://www.postgresql.org/) database server and [Redis](https://redis.io/) server for managing a metadata database.
+To run a Docmost instance it is necessary to prepare a [Postgres](https://www.postgresql.org/) database server and [Redis](https://redis.io/) database for managing cache data.
 
 If you are looking for Ansible roles for them, you can check out [ansible-role-postgres](https://github.com/mother-of-all-self-hosting/ansible-role-postgres) and [ansible-role-redis](https://github.com/mother-of-all-self-hosting/ansible-role-redis), both of which are maintained by the [Mother-of-All-Self-Hosting (MASH)](https://github.com/mother-of-all-self-hosting) team. The roles for [KeyDB](https://keydb.dev/) ([ansible-role-keydb](https://github.com/mother-of-all-self-hosting/ansible-role-keydb)) and [Valkey](https://valkey.io/) ([ansible-role-valkey](https://github.com/mother-of-all-self-hosting/ansible-role-valkey)) are available as well.
 
@@ -64,11 +64,13 @@ After adjusting the hostname, make sure to adjust your DNS records to point the 
 
 **Note**: hosting Docmost under a subpath (by configuring the `docmost_path_prefix` variable) does not seem to be possible due to Docmost's technical limitations.
 
-### Set variables for connecting to a Redis server
+### Configure a Redis database
 
-As described above, it is necessary to set up a [Redis](https://redis.io/) server for managing a metadata database of a Docmost instance. You can use either KeyDB or Valkey alternatively.
+It is necessary to set up a [Redis](https://redis.io/) database for the Docmost instance. KeyDB or Valkey can also be used instead.
 
-Having configured it, you need to add and adjust the following configuration to your `vars.yml` file, so that the Docmost instance will connect to the server:
+To enable the Redis database for Docmost, add the following configuration to your `vars.yml` file:
+
+To enable the Redis database for Bar Assistant server, add the following configuration to your `vars.yml` file:
 
 ```yaml
 docmost_redis_username: ""
@@ -78,7 +80,7 @@ docmost_redis_port: 6379
 docmost_redis_dbnumber: ""
 ```
 
-Make sure to replace `YOUR_REDIS_SERVER_HOSTNAME_HERE` with the hostname of your Redis server. If the Redis server runs on the same host as Docmost, set `localhost`.
+Make sure to replace `YOUR_REDIS_SERVER_HOSTNAME_HERE` with your own value.
 
 ### Configure a storage backend
 
