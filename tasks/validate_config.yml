@@ -1,6 +1,6 @@
 # SPDX-FileCopyrightText: 2023 Julian-Samuel Gebühr
-# SPDX-FileCopyrightText: 2023 - 2025 Slavi Pantaleev
-# SPDX-FileCopyrightText: 2025 Suguru Hirahara
+# SPDX-FileCopyrightText: 2023-2025 Slavi Pantaleev
+# SPDX-FileCopyrightText: 2025, 2026 Suguru Hirahara
 #
 # SPDX-License-Identifier: AGPL-3.0-or-later
 
@@ -19,18 +19,19 @@
 - name: Fail if required Docmost settings not defined
   ansible.builtin.fail:
     msg: >-
-      You need to define a required configuration setting (`{{ item }}`).
-  when: "lookup('vars', item, default='') | string | length == 0"
+      You need to define a required configuration setting (`{{ item.name }}`).
+  when: "item.when | bool and lookup('vars', item.name, default='') | string | length == 0"
   with_items:
-    - docmost_uid
-    - docmost_gid
-    - docmost_hostname
-    - docmost_path_prefix
-    - docmost_container_network
-    - docmost_database_hostname
-    - docmost_database_password
-    - docmost_environment_variable_app_secret
-    - docmost_environment_variable_redis_url
+    - { "name": "docmost_uid", when: true }
+    - { "name": "docmost_gid", when: true }
+    - { "name": "docmost_hostname", when: true }
+    - { "name": "docmost_path_prefix", when: true }
+    - { "name": "docmost_container_network", when: true }
+    - { "name": "docmost_container_labels_traefik_middleware_basic_auth_users", when: "{{ docmost_container_labels_traefik_middleware_basic_auth_enabled }}" }
+    - { "name": "docmost_database_hostname", when: true }
+    - { "name": "docmost_database_password", when: true }
+    - { "name": "docmost_environment_variable_app_secret", when: true }
+    - { "name": "docmost_environment_variable_redis_url", when: true }
 
 - name: Fail if Docmost storage drver option is invalid
   ansible.builtin.fail:
