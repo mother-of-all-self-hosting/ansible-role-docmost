@@ -39,7 +39,6 @@ docmost_container_image_tag: "{{ docmost_version }}"
 docmost_container_image_registry_prefix: "{{ docmost_container_image_registry_prefix_upstream }}"
 docmost_container_image_registry_prefix_upstream: "{{ docmost_container_image_registry_prefix_upstream_default }}"
 docmost_container_image_registry_prefix_upstream_default: docker.io/
-docmost_container_image_force_pull: "{{ docmost_container_image.endswith(':latest') }}"
 
 docmost_container_image_self_build: false
 docmost_container_image_self_build_name: "docmost/docmost:{{ docmost_container_image_self_build_repo_version }}"

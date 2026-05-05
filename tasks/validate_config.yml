@@ -15,6 +15,7 @@
     - { "old": "docmost_environment_variable_port", "new": "docmost_container_http_port" }
     - { "old": "docmost_redis_host", "new": "docmost_redis_hostname" }
     - { "old": "docmost_http_header_content_permission_policy", "new": "docmost_http_header_permissions_policy" }
+    - { "old": "docmost_container_image_force_pull", "new": "<removed> (the new community.docker.docker_image_pull module handles this natively)" }
 
 - name: Fail if required Docmost settings not defined
   ansible.builtin.fail:
