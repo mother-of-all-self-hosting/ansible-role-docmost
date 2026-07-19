@@ -1,0 +1,103 @@
+# SPDX-FileCopyrightText: 2026 Suguru Hirahara
+# SPDX-FileCopyrightText: 2026 spatterlight
+#
+# SPDX-License-Identifier: AGPL-3.0-or-later
+
+---
+dependency:
+  name: galaxy
+  options:
+    requirements-file: requirements.yml
+driver:
+  name: docker
+platforms:
+  - name: docmost-${MOLECULE_DISTRO:-ubuntu2604}-default
+    image: "geerlingguy/docker-${MOLECULE_DISTRO:-ubuntu2604}-ansible:latest"
+    command: ${MOLECULE_DOCKER_COMMAND:-""}
+    volumes:
+      - /sys/fs/cgroup:/sys/fs/cgroup:rw
+    cgroupns_mode: host
+    privileged: true
+    pre_build_image: true
+provisioner:
+  name: ansible
+  config_options:
+    defaults:
+      callback_result_format: yaml
+  inventory:
+    group_vars:
+      all:
+        # Helper variables
+        docmost_debug_service_enabled: false
+
+        # Variables for Docmost
+        docmost_uid: 1000
+        docmost_gid: 1000
+        docmost_scheme: http
+        docmost_hostname: localhost
+        docmost_container_labels_traefik_enabled: false
+        docmost_container_http_host_bind_port: 3000
+        docmost_environment_variable_app_secret: U3Ia0iN8qel15Aab6gNINjU4iG8W6vvlrLdwVNyIE6HDVspTqvbn5fJEfEDEiMF9
+        docmost_environment_variable_disable_telemetry: true
+
+        # Test self-building
+        docmost_container_image_self_build: true
+
+        # Variables required for Docmost to connect to the Postgres database (via Unix socket)
+        docmost_database_hostname: "{{ postgres_connection_hostname }}"
+        docmost_database_port: "{{ postgres_connection_port }}"
+        docmost_database_username: my_database_username
+        docmost_database_password: my_database_password
+        docmost_database_name: docmost
+        docmost_systemd_required_services_list_auto: |
+          {{
+            (['postgres.service'])
+          }}
+
+        # Variables required for Docmost to connect to the Valkey data-store
+        docmost_redis_hostname: "{{ valkey_identifier }}"
+        docmost_container_additional_networks_custom:
+          - "{{ valkey_container_network }}"
+        docmost_systemd_required_services_list_custom:
+          - "{{ valkey_identifier }}.service"
+        docmost_environment_variable_redis_url: "redis://{{ docmost_redis_hostname }}:{{ docmost_redis_port }}"
+
+        # Variables for Postgres
+        postgres_uid: 1000
+        postgres_gid: 1000
+        postgres_connection_password: postgres_password
+        postgres_container_network: "{{ docmost_container_network }}"
+        postgres_managed_databases: |
+          {{
+            [{
+              'name': docmost_database_name,
+              'username': docmost_database_username,
+              'password': docmost_database_password,
+            }]
+          }}
+
+        # Variables for Valkey
+        valkey_uid: 1000
+        valkey_gid: 1000
+        valkey_arch: amd64
+  env:
+    # Workaround for https://github.com/ansible/molecule/issues/4391
+    ANSIBLE_ROLES_PATH: ${MOLECULE_PROJECT_DIRECTORY}/..:/.ansible/roles:/usr/share/ansible/roles:/etc/ansible/roles:~/.ansible/roles
+scenario:
+  # See: https://docs.ansible.com/projects/molecule/configuration/?h=test_sequence#scenario
+  test_sequence:
+    - dependency
+    - cleanup
+    - destroy
+    - syntax
+    - create
+    - prepare
+    - converge
+    # Disable idempotence test for now due to ansible-role-postgres
+    # - idempotence
+    - side_effect
+    - verify
+    - cleanup
+    - destroy
+verifier:
+  name: ansible

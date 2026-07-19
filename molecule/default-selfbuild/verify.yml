@@ -1,0 +1,53 @@
+# SPDX-FileCopyrightText: 2026 Suguru Hirahara
+# SPDX-FileCopyrightText: 2026 spatterlight
+#
+# SPDX-License-Identifier: AGPL-3.0-or-later
+
+---
+- name: Verify Docmost systemd service
+  hosts: all
+  become: true
+  gather_facts: false
+  tasks:
+    - name: Wait for Docmost service to become active (up to 180s)
+      ansible.builtin.systemd:
+        name: docmost.service
+      register: docmost_service
+      until: docmost_service.status.ActiveState == 'active'
+      retries: 36
+      delay: 5
+
+    - name: Assert Docmost service is active
+      ansible.builtin.assert:
+        that: docmost_service.status.ActiveState == 'active'
+        fail_msg: "docmost.service not active ({{ docmost_service.status.ActiveState }})"
+        success_msg: "docmost.service is active"
+
+    - name: Retrieve Docmost service log for debugging
+      when: docmost_debug_service_enabled | bool
+      ansible.builtin.command:
+        cmd: journalctl -xeu docmost.service
+      changed_when: false
+
+    - name: Wait for Docmost HTTP endpoint to respond (up to 10m)
+      ansible.builtin.uri:
+        url: "http://localhost:3000/"
+        method: GET
+        status_code: [200, 301, 302]
+        follow_redirects: none
+      register: docmost_endpoint
+      until: docmost_endpoint.status in [200, 301, 302]
+      retries: 120
+      delay: 5
+
+    - name: Assert Docmost HTTP endpoint responds
+      ansible.builtin.assert:
+        that: docmost_endpoint.status in [200, 301, 302]
+        fail_msg: "Docmost did not respond as expected ({{ docmost_endpoint.status | default('no response') }})"
+        success_msg: "Docmost responded with {{ docmost_endpoint.status }}"
+
+    - name: Show Docmost systemd service status summary
+      ansible.builtin.debug:
+        msg:
+          - "Docmost systemd: {{ docmost_service.status.ActiveState }}"
+          - "Docmost HTTP: {{ docmost_endpoint.status }}"
