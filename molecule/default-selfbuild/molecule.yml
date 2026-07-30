@@ -44,7 +44,7 @@ provisioner:
         # Test self-building
         docmost_container_image_self_build: true
 
-        # Variables required for Docmost to connect to the Postgres database (via Unix socket)
+        # Variables required for Docmost to connect to the Postgres database
         docmost_database_hostname: "{{ postgres_connection_hostname }}"
         docmost_database_port: "{{ postgres_connection_port }}"
         docmost_database_username: my_database_username

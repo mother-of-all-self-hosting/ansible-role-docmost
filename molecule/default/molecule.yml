@@ -41,7 +41,7 @@ provisioner:
         docmost_environment_variable_app_secret: U3Ia0iN8qel15Aab6gNINjU4iG8W6vvlrLdwVNyIE6HDVspTqvbn5fJEfEDEiMF9
         docmost_environment_variable_disable_telemetry: true
 
-        # Variables required for Docmost to connect to the Postgres database (via Unix socket)
+        # Variables required for Docmost to connect to the Postgres database
         docmost_database_hostname: "{{ postgres_connection_hostname }}"
         docmost_database_port: "{{ postgres_connection_port }}"
         docmost_database_username: my_database_username
