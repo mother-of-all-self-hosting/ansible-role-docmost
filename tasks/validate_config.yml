@@ -31,6 +31,9 @@
     - docmost_database_hostname
     - docmost_database_password
     - docmost_environment_variable_app_secret
+    # `docmost_environment_variable_redis_url` is derived from the hostname and is
+    # never empty, so it cannot stand in for a check that the hostname was provided.
+    - docmost_redis_hostname
     - docmost_environment_variable_redis_url
 
 - name: Fail if Docmost storage drver option is invalid

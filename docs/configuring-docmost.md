@@ -71,14 +71,21 @@ It is necessary to set up a Redis database for the Docmost instance. Valkey can 
 To enable the Redis database for Docmost, add the following configuration to your `vars.yml` file:
 
 ```yaml
+docmost_redis_hostname: YOUR_REDIS_SERVER_HOSTNAME_HERE
+```
+
+Make sure to replace `YOUR_REDIS_SERVER_HOSTNAME_HERE` with your own value.
+
+The hostname is the only required setting. If your Redis server requires authentication, listens on a non-default port, or you would like to select a specific database number, set the corresponding variables as well:
+
+```yaml
 docmost_redis_username: ""
 docmost_redis_password: ""
-docmost_redis_hostname: YOUR_REDIS_SERVER_HOSTNAME_HERE
 docmost_redis_port: 6379
 docmost_redis_dbnumber: ""
 ```
 
-Make sure to replace `YOUR_REDIS_SERVER_HOSTNAME_HERE` with your own value.
+The connection URL passed to Docmost (`docmost_environment_variable_redis_url`) is assembled from these variables, omitting the sections which are left empty.
 
 ### Configure a storage backend
 
