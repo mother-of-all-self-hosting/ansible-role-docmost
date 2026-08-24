@@ -3,7 +3,7 @@ galaxy_info:
   author: Suguru Hirahara
   company: progressiv
   role_name: docmost
-  namespace: progressiv
+  namespace: mash
   description: Docmost
   platforms:
     - name: Debian
