@@ -1,0 +1,9 @@
+SPDX-FileCopyrightText: 2026 Slavi Pantaleev
+
+SPDX-License-Identifier: AGPL-3.0-or-later
+
+This file is uploaded to Docmost over its API by molecule/default/verify.yml,
+which then looks for it on the host at the path Docmost reports having written
+it to. Finding it there, at the size Docmost reports, is what shows that the
+directory the role bind-mounts into the container is the one Docmost's local
+storage driver really writes to.

@@ -1,53 +1,286 @@
 # SPDX-FileCopyrightText: 2026 spatterlight
 # SPDX-FileCopyrightText: 2026 Suguru Hirahara
+# SPDX-FileCopyrightText: 2026 Slavi Pantaleev
 #
 # SPDX-License-Identifier: AGPL-3.0-or-later
 
 ---
-- name: Verify Docmost systemd service
+# What is different about this scenario is where the container image came from,
+# so that is what this play concentrates on: the role must have cloned Docmost at
+# the tag matching docmost_version, built an image out of that clone, and started
+# the service on that image rather than on anything a registry handed it.
+#
+# It then does just enough with the running instance to show that the image it
+# built actually works - completing the first-run setup, logging in, and taking a
+# page through a create/read-back round-trip. Whether Docmost stores pages in
+# Postgres, keeps sessions in Valkey and writes uploads to the bind-mounted data
+# path does not depend on how the image was produced, so proving that is left to
+# the `default` scenario instead of being restated here.
+- name: Verify a self-built Docmost
   hosts: all
   become: true
   gather_facts: false
+
+  vars:
+    docmost_verify_base_url: "http://127.0.0.1:{{ docmost_container_http_host_bind_port }}"
+    docmost_verify_workspace_name: Molecule Selfbuild Workspace
+    docmost_verify_admin_name: Molecule Admin
+    docmost_verify_admin_email: molecule-admin@example.com
+    docmost_verify_admin_password: molecule-admin-password
+    docmost_verify_page_title: Molecule Selfbuild Verification Page
+    docmost_verify_page_marker: molecule-selfbuild-roundtrip-marker-a91c
+
   tasks:
-    - name: Wait for Docmost service to become active (up to 180s)
+    # Only leaf literals are read out of the role's defaults. Scenario-specific
+    # values arrive through molecule.yml's group_vars, and pulling the defaults
+    # file into the play's own namespace would override those with the role's.
+    - name: Read the role's defaults for leaf literals
+      ansible.builtin.include_vars:
+        file: "{{ lookup('env', 'MOLECULE_PROJECT_DIRECTORY') }}/defaults/main.yml"
+        name: docmost_role_defaults
+
+    # The role names a self-built image after the tag it checked out, which for a
+    # pinned version is `v` followed by that version. Restated here rather than
+    # read out of the role, so that the role and the test have to agree.
+    - name: Name the image the role is expected to have built
+      ansible.builtin.set_fact:
+        docmost_verify_self_build_tag: "v{{ docmost_role_defaults.docmost_version }}"
+        docmost_verify_self_build_image: "docmost/docmost:v{{ docmost_role_defaults.docmost_version }}"
+
+    # --------------------------------------------------------------------------
+    # Readiness
+    # --------------------------------------------------------------------------
+
+    - name: Wait for the Docmost systemd service to become active
       ansible.builtin.systemd:
-        name: docmost.service
+        name: "{{ docmost_identifier }}.service"
       register: docmost_service
       until: docmost_service.status.ActiveState == 'active'
       retries: 36
       delay: 5
 
-    - name: Assert Docmost service is active
+    - name: Assert that the Docmost systemd service is active
       ansible.builtin.assert:
         that: docmost_service.status.ActiveState == 'active'
-        fail_msg: "docmost.service not active ({{ docmost_service.status.ActiveState }})"
-        success_msg: "docmost.service is active"
+        fail_msg: "{{ docmost_identifier }}.service is {{ docmost_service.status.ActiveState }}, not active"
+        success_msg: "{{ docmost_identifier }}.service is active"
 
-    - name: Retrieve Docmost service log for debugging
+    - name: Retrieve the Docmost service log for debugging
       when: docmost_debug_service_enabled | bool
       ansible.builtin.command:
-        cmd: journalctl -xeu docmost.service
+        cmd: "journalctl -xeu {{ docmost_identifier }}.service"
       changed_when: false
 
-    - name: Wait for Docmost HTTP endpoint to respond (up to 10m)
+    - name: Wait for Docmost to start serving HTTP
       ansible.builtin.uri:
-        url: "http://localhost:3000/"
+        url: "{{ docmost_verify_base_url }}/"
         method: GET
-        status_code: [200, 301, 302]
+        status_code: [200]
         follow_redirects: none
-      register: docmost_endpoint
-      until: docmost_endpoint.status in [200, 301, 302]
+      register: docmost_frontend_before_setup
+      until: docmost_frontend_before_setup.status == 200
       retries: 120
       delay: 5
 
-    - name: Assert Docmost HTTP endpoint responds
-      ansible.builtin.assert:
-        that: docmost_endpoint.status in [200, 301, 302]
-        fail_msg: "Docmost did not respond as expected ({{ docmost_endpoint.status | default('no response') }})"
-        success_msg: "Docmost responded with {{ docmost_endpoint.status }}"
+    # --------------------------------------------------------------------------
+    # Where the image came from
+    # --------------------------------------------------------------------------
 
-    - name: Show Docmost systemd service status summary
+    - name: Read the source checkout the role cloned
+      ansible.builtin.command:
+        argv:
+          - git
+          - -C
+          - "{{ docmost_container_image_self_build_src_files_path }}"
+          - describe
+          - --tags
+          - --exact-match
+          - HEAD
+      register: docmost_source_tag
+      changed_when: false
+
+    - name: Assert that the clone sits on the tag matching the version the role installs
+      ansible.builtin.assert:
+        that: docmost_source_tag.stdout | trim == docmost_verify_self_build_tag
+        fail_msg: "The clone is at {{ docmost_source_tag.stdout | trim }}, expected {{ docmost_verify_self_build_tag }}"
+        success_msg: "The clone under {{ docmost_container_image_self_build_src_files_path }} is at {{ docmost_verify_self_build_tag }}"
+
+    - name: Inspect the container that is running
+      ansible.builtin.command:
+        argv:
+          - docker
+          - inspect
+          - "{{ docmost_identifier }}"
+      register: docmost_container_inspect
+      changed_when: false
+
+    - name: Assert that the service runs on the self-built image
+      ansible.builtin.assert:
+        that: (docmost_container_inspect.stdout | from_json | first).Config.Image == docmost_verify_self_build_image
+        fail_msg: "The container runs {{ (docmost_container_inspect.stdout | from_json | first).Config.Image }}, expected {{ docmost_verify_self_build_image }}"
+        success_msg: "The container runs {{ docmost_verify_self_build_image }}"
+
+    - name: Inspect the image the container runs
+      ansible.builtin.command:
+        argv:
+          - docker
+          - image
+          - inspect
+          - "{{ docmost_verify_self_build_image }}"
+      register: docmost_image_inspect
+      changed_when: false
+
+    # An image that came from a registry carries the digest it was pulled under.
+    # An image that was built on this machine has never had one, which is what
+    # separates a genuine self-build from a pull that happened to be tagged the
+    # same way.
+    - name: Assert that the image was built here rather than pulled
+      ansible.builtin.assert:
+        that: (docmost_image_inspect.stdout | from_json | first).RepoDigests | length == 0
+        fail_msg: "{{ docmost_verify_self_build_image }} carries registry digests {{ (docmost_image_inspect.stdout | from_json | first).RepoDigests }}, so it was pulled, not built"
+        success_msg: "{{ docmost_verify_self_build_image }} carries no registry digest, so it was built on this machine"
+
+    # --------------------------------------------------------------------------
+    # Negative control - the self-built image serves, and is not yet usable
+    # --------------------------------------------------------------------------
+
+    - name: Assert that the frontend answers 200 even though no workspace exists
+      ansible.builtin.assert:
+        that: docmost_frontend_before_setup.status == 200
+        fail_msg: "Docmost did not serve its frontend"
+        success_msg: "Docmost serves its frontend with 200 - which, on its own, is not evidence of a working instance"
+
+    - name: Ask an endpoint that has to reach the database, before setup
+      ansible.builtin.uri:
+        url: "{{ docmost_verify_base_url }}/api/workspace/public"
+        method: POST
+        body_format: json
+        body: {}
+        status_code: [404]
+      register: docmost_workspace_before_setup
+
+    - name: Assert that Docmost reports having no workspace
+      ansible.builtin.assert:
+        that:
+          - docmost_workspace_before_setup.status == 404
+          - docmost_workspace_before_setup.json.message == 'Workspace not found'
+        fail_msg: "Expected a 404 'Workspace not found', got {{ docmost_workspace_before_setup.status }}"
+        success_msg: "Requests that reach the database report that no workspace exists"
+
+    # --------------------------------------------------------------------------
+    # The image that was built actually runs Docmost
+    # --------------------------------------------------------------------------
+
+    - name: Complete the first-run workspace setup
+      ansible.builtin.uri:
+        url: "{{ docmost_verify_base_url }}/api/auth/setup"
+        method: POST
+        body_format: json
+        body:
+          workspaceName: "{{ docmost_verify_workspace_name }}"
+          name: "{{ docmost_verify_admin_name }}"
+          email: "{{ docmost_verify_admin_email }}"
+          password: "{{ docmost_verify_admin_password }}"
+        status_code: [200]
+      register: docmost_setup
+
+    - name: Assert that setup created the workspace
+      ansible.builtin.assert:
+        that: docmost_setup.json.data.name == docmost_verify_workspace_name
+        fail_msg: "Setup returned workspace {{ docmost_setup.json.data.name | default('none') }}"
+        success_msg: "Setup created the workspace '{{ docmost_setup.json.data.name }}'"
+
+    - name: Log in as the administrator created by setup
+      ansible.builtin.uri:
+        url: "{{ docmost_verify_base_url }}/api/auth/login"
+        method: POST
+        body_format: json
+        body:
+          email: "{{ docmost_verify_admin_email }}"
+          password: "{{ docmost_verify_admin_password }}"
+        status_code: [200]
+      register: docmost_login
+
+    - name: Assert that logging in yielded an authentication token
+      ansible.builtin.assert:
+        that:
+          - "'authToken' in docmost_login.cookies"
+          - docmost_login.cookies.authToken | length > 0
+        fail_msg: "Logging in did not set an authToken cookie"
+        success_msg: "Logging in with the stored password returned an authToken cookie"
+
+    # The version baked into the image, read out of the container that is serving
+    # requests. This closes the loop on the build: the tag that was checked out is
+    # the source the running server was compiled from.
+    - name: Read the version out of the running container
+      ansible.builtin.command:
+        argv:
+          - docker
+          - exec
+          - "{{ docmost_identifier }}"
+          - cat
+          - /app/package.json
+      register: docmost_package_json
+      changed_when: false
+
+    - name: Assert that the self-built Docmost is the version it was built from
+      ansible.builtin.assert:
+        that: (docmost_package_json.stdout | from_json).version is match('^' + (docmost_role_defaults.docmost_version | string | regex_escape))
+        fail_msg: "The running Docmost is version {{ (docmost_package_json.stdout | from_json).version }}, expected {{ docmost_role_defaults.docmost_version }}"
+        success_msg: "The self-built Docmost is version {{ (docmost_package_json.stdout | from_json).version }}"
+
+    - name: List the spaces of the workspace
+      ansible.builtin.uri:
+        url: "{{ docmost_verify_base_url }}/api/spaces"
+        method: POST
+        body_format: json
+        body: {}
+        headers:
+          Cookie: "{{ docmost_login.cookies_string }}"
+        status_code: [200]
+      register: docmost_spaces
+
+    - name: Create a page
+      ansible.builtin.uri:
+        url: "{{ docmost_verify_base_url }}/api/pages/create"
+        method: POST
+        body_format: json
+        body:
+          spaceId: "{{ docmost_spaces.json.data['items'][0].id }}"
+          title: "{{ docmost_verify_page_title }}"
+          content: "{{ docmost_verify_page_marker }}"
+          format: markdown
+        headers:
+          Cookie: "{{ docmost_login.cookies_string }}"
+        status_code: [200]
+      register: docmost_page_create
+
+    - name: Read the page back
+      ansible.builtin.uri:
+        url: "{{ docmost_verify_base_url }}/api/pages/info"
+        method: POST
+        body_format: json
+        body:
+          pageId: "{{ docmost_page_create.json.data.id }}"
+          includeContent: true
+        headers:
+          Cookie: "{{ docmost_login.cookies_string }}"
+        status_code: [200]
+      register: docmost_page_info
+
+    - name: Assert that the page reads back with the title and body it was created with
+      ansible.builtin.assert:
+        that:
+          - docmost_page_info.json.data.id == docmost_page_create.json.data.id
+          - docmost_page_info.json.data.title == docmost_verify_page_title
+          - docmost_verify_page_marker in (docmost_page_info.json.data.content | to_json)
+        fail_msg: "The page did not read back as written"
+        success_msg: "The page created over the API reads back with its title and body intact"
+
+    - name: Summarize what was verified
       ansible.builtin.debug:
         msg:
-          - "Docmost systemd: {{ docmost_service.status.ActiveState }}"
-          - "Docmost HTTP: {{ docmost_endpoint.status }}"
+          - "source: {{ docmost_container_image_self_build_src_files_path }} at {{ docmost_source_tag.stdout | trim }}"
+          - "image: {{ docmost_verify_self_build_image }}, built here (no registry digest)"
+          - "version: {{ (docmost_package_json.stdout | from_json).version }} running (role installs {{ docmost_role_defaults.docmost_version }})"
+          - "workspace endpoint: 404 before setup, workspace created and page round-tripped after"

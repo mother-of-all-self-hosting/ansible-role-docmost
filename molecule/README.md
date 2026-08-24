@@ -47,11 +47,22 @@ Currently these testing scenarios are available:
 
 ### `default`
 
-Tests a standard Docmost installation.
+Tests a standard Docmost installation, against an image pulled from upstream.
+
+A freshly installed Docmost serves its frontend with `200` whether or not anybody has completed its first-run setup, so the verification starts from a negative control which asserts exactly that: `/` answers `200` while every request that reaches the database answers `Workspace not found`, Postgres holds no workspace row, and Valkey holds no session. It then has to move each of those off its starting value:
+
+- the first-run workspace setup is completed over the API, and the endpoint that answered `404` starts returning the new workspace
+- logging in with the stored password returns a token, which the version endpoint refuses to answer without
+- the running Docmost reports the version that `docmost_version` names
+- a page is created over the API, read back with its body, and then read straight out of Postgres
+- logging in leaves session state in Valkey, alongside the job queues Docmost runs there
+- a file uploaded over the API is readable on the host underneath the role's data path, which is what shows that the storage bind mount is the one Docmost writes to
 
 ### `default-selfbuild`
 
 Tests a standard Docmost installation with self-building the container image.
+
+Since what is different here is where the image came from, this is what its verification concentrates on: the clone the role made sits on the tag matching `docmost_version`, the service runs the image built out of it, and that image carries no registry digest — which is what tells a genuine build apart from a pull that happened to be tagged the same way. It then completes the first-run setup, logs in, checks the version the built image reports, and round-trips a page, to show that the image it built runs. Everything that does not depend on how the image was produced is left to the `default` scenario.
 
 ## Running
 

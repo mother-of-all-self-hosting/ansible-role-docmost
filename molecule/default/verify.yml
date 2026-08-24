@@ -1,53 +1,496 @@
 # SPDX-FileCopyrightText: 2026 spatterlight
 # SPDX-FileCopyrightText: 2026 Suguru Hirahara
+# SPDX-FileCopyrightText: 2026 Slavi Pantaleev
 #
 # SPDX-License-Identifier: AGPL-3.0-or-later
 
 ---
-- name: Verify Docmost systemd service
+# Docmost serves its frontend from a static bundle, so `GET /` answers 200 long
+# before - and regardless of whether - the instance is usable. A freshly
+# installed Docmost has no workspace at all until somebody completes the
+# first-run setup, and it answers 200 on `/` in exactly that state too.
+#
+# The negative control at the top of this play pins that down: it asserts that
+# `/` says 200 while every request that reaches the database says "Workspace not
+# found", that Postgres holds no workspace row, and that Valkey holds no session.
+# Everything below it then has to move those same probes off their starting
+# values, which no amount of "the container is running" can do on its own.
+#
+# The first-run setup is deliberately driven from here rather than from
+# converge.yml: converge installs, and only what a real deployment would leave
+# behind must be in place when this play begins.
+- name: Verify Docmost
   hosts: all
   become: true
   gather_facts: false
+
+  vars:
+    docmost_verify_base_url: "http://127.0.0.1:{{ docmost_container_http_host_bind_port }}"
+    docmost_verify_workspace_name: Molecule Workspace
+    docmost_verify_admin_name: Molecule Admin
+    docmost_verify_admin_email: molecule-admin@example.com
+    docmost_verify_admin_password: molecule-admin-password
+    docmost_verify_page_title: Molecule Verification Page
+    # Written into a page body, stored in Postgres and read back over the API,
+    # so it has to be something no other part of Docmost would produce.
+    docmost_verify_page_marker: molecule-page-roundtrip-marker-e4d9
+    # Uploaded over the API and then looked for on the host, at the path Docmost
+    # reports having written it to. The file lives in this scenario's `files/`
+    # directory.
+    docmost_verify_attachment_name: molecule-docmost-attachment.txt
+    # Reaches into the Postgres container that ansible-role-postgres installed,
+    # to confirm the API's answers against the database rather than against itself.
+    docmost_verify_psql_command:
+      - docker
+      - exec
+      - "{{ postgres_identifier }}"
+      - psql
+      - --username={{ docmost_database_username }}
+      - --dbname={{ docmost_database_name }}
+      - --no-align
+      - --tuples-only
+      - --command
+    docmost_verify_valkey_scan_command:
+      - docker
+      - exec
+      - "{{ valkey_identifier }}"
+      - valkey-cli
+      - --scan
+      - --pattern
+
   tasks:
-    - name: Wait for Docmost service to become active (up to 180s)
+    # Only leaf literals are read out of the role's defaults. Scenario-specific
+    # values arrive through molecule.yml's group_vars, and pulling the defaults
+    # file into the play's own namespace would override those with the role's.
+    - name: Read the role's defaults for leaf literals
+      ansible.builtin.include_vars:
+        file: "{{ lookup('env', 'MOLECULE_PROJECT_DIRECTORY') }}/defaults/main.yml"
+        name: docmost_role_defaults
+
+    # --------------------------------------------------------------------------
+    # Readiness
+    # --------------------------------------------------------------------------
+
+    - name: Wait for the Docmost systemd service to become active
       ansible.builtin.systemd:
-        name: docmost.service
+        name: "{{ docmost_identifier }}.service"
       register: docmost_service
       until: docmost_service.status.ActiveState == 'active'
       retries: 36
       delay: 5
 
-    - name: Assert Docmost service is active
+    - name: Assert that the Docmost systemd service is active
       ansible.builtin.assert:
         that: docmost_service.status.ActiveState == 'active'
-        fail_msg: "docmost.service not active ({{ docmost_service.status.ActiveState }})"
-        success_msg: "docmost.service is active"
+        fail_msg: "{{ docmost_identifier }}.service is {{ docmost_service.status.ActiveState }}, not active"
+        success_msg: "{{ docmost_identifier }}.service is active"
 
-    - name: Retrieve Docmost service log for debugging
+    - name: Retrieve the Docmost service log for debugging
       when: docmost_debug_service_enabled | bool
       ansible.builtin.command:
-        cmd: journalctl -xeu docmost.service
+        cmd: "journalctl -xeu {{ docmost_identifier }}.service"
       changed_when: false
 
-    - name: Wait for Docmost HTTP endpoint to respond (up to 10m)
+    # Docmost only starts listening once it has connected to Redis, connected to
+    # Postgres and finished migrating the schema, so reaching this point already
+    # means all three happened. It says nothing about the instance being usable.
+    - name: Wait for Docmost to start serving HTTP
       ansible.builtin.uri:
-        url: "http://localhost:3000/"
+        url: "{{ docmost_verify_base_url }}/"
         method: GET
-        status_code: [200, 301, 302]
+        status_code: [200]
         follow_redirects: none
-      register: docmost_endpoint
-      until: docmost_endpoint.status in [200, 301, 302]
+      register: docmost_frontend_before_setup
+      until: docmost_frontend_before_setup.status == 200
       retries: 120
       delay: 5
 
-    - name: Assert Docmost HTTP endpoint responds
-      ansible.builtin.assert:
-        that: docmost_endpoint.status in [200, 301, 302]
-        fail_msg: "Docmost did not respond as expected ({{ docmost_endpoint.status | default('no response') }})"
-        success_msg: "Docmost responded with {{ docmost_endpoint.status }}"
+    # --------------------------------------------------------------------------
+    # Negative control - Docmost is up and answering, and is not yet usable
+    # --------------------------------------------------------------------------
 
-    - name: Show Docmost systemd service status summary
+    - name: Assert that the frontend answers 200 even though no workspace exists
+      ansible.builtin.assert:
+        that: docmost_frontend_before_setup.status == 200
+        fail_msg: "Docmost did not serve its frontend"
+        success_msg: "Docmost serves its frontend with 200 - which, on its own, is not evidence of a working instance"
+
+    - name: Ask an endpoint that has to reach the database, before setup
+      ansible.builtin.uri:
+        url: "{{ docmost_verify_base_url }}/api/workspace/public"
+        method: POST
+        body_format: json
+        body: {}
+        status_code: [404]
+      register: docmost_workspace_before_setup
+
+    - name: Assert that Docmost reports having no workspace
+      ansible.builtin.assert:
+        that:
+          - docmost_workspace_before_setup.status == 404
+          - docmost_workspace_before_setup.json.message == 'Workspace not found'
+        fail_msg: "Expected a 404 'Workspace not found', got {{ docmost_workspace_before_setup.status }}"
+        success_msg: "Requests that reach the database report that no workspace exists"
+
+    # The table is only there because Docmost migrated the schema on startup, so
+    # this reads zero rows rather than failing on a missing relation.
+    - name: Count the workspaces in Postgres, before setup
+      ansible.builtin.command:
+        argv: "{{ docmost_verify_psql_command + ['SELECT count(*) FROM workspaces'] }}"
+      register: docmost_workspace_count_before_setup
+      changed_when: false
+
+    - name: Assert that Postgres holds no workspace
+      ansible.builtin.assert:
+        that: docmost_workspace_count_before_setup.stdout | trim == '0'
+        fail_msg: "Expected no workspace rows in Postgres, found {{ docmost_workspace_count_before_setup.stdout | trim }}"
+        success_msg: "Postgres holds the migrated Docmost schema and no workspace"
+
+    - name: Look for Docmost session state in Valkey, before setup
+      ansible.builtin.command:
+        argv: "{{ docmost_verify_valkey_scan_command + ['session:activity:*'] }}"
+      register: docmost_valkey_sessions_before_setup
+      changed_when: false
+
+    - name: Assert that Valkey holds no Docmost session
+      ansible.builtin.assert:
+        that: docmost_valkey_sessions_before_setup.stdout | trim | length == 0
+        fail_msg: "Expected no session keys in Valkey, found: {{ docmost_valkey_sessions_before_setup.stdout }}"
+        success_msg: "Valkey holds no Docmost session"
+
+    # --------------------------------------------------------------------------
+    # First-run setup
+    # --------------------------------------------------------------------------
+
+    - name: Complete the first-run workspace setup
+      ansible.builtin.uri:
+        url: "{{ docmost_verify_base_url }}/api/auth/setup"
+        method: POST
+        body_format: json
+        body:
+          workspaceName: "{{ docmost_verify_workspace_name }}"
+          name: "{{ docmost_verify_admin_name }}"
+          email: "{{ docmost_verify_admin_email }}"
+          password: "{{ docmost_verify_admin_password }}"
+        status_code: [200]
+      register: docmost_setup
+
+    - name: Assert that setup created the workspace
+      ansible.builtin.assert:
+        that: docmost_setup.json.data.name == docmost_verify_workspace_name
+        fail_msg: "Setup returned workspace {{ docmost_setup.json.data.name | default('none') }}"
+        success_msg: "Setup created the workspace '{{ docmost_setup.json.data.name }}'"
+
+    - name: Ask the same endpoint that reported no workspace, after setup
+      ansible.builtin.uri:
+        url: "{{ docmost_verify_base_url }}/api/workspace/public"
+        method: POST
+        body_format: json
+        body: {}
+        status_code: [200]
+      register: docmost_workspace_after_setup
+
+    - name: Assert that the endpoint moved off its negative-control answer
+      ansible.builtin.assert:
+        that: docmost_workspace_after_setup.json.data.name == docmost_verify_workspace_name
+        fail_msg: "Expected workspace '{{ docmost_verify_workspace_name }}', got {{ docmost_workspace_after_setup.json.data.name | default('none') }}"
+        success_msg: "The endpoint that answered 404 before setup now returns the workspace"
+
+    # --------------------------------------------------------------------------
+    # Authentication
+    # --------------------------------------------------------------------------
+
+    # A fresh login rather than the cookie setup handed back, so that the
+    # password Docmost hashed and stored is what is being exercised.
+    - name: Log in as the administrator created by setup
+      ansible.builtin.uri:
+        url: "{{ docmost_verify_base_url }}/api/auth/login"
+        method: POST
+        body_format: json
+        body:
+          email: "{{ docmost_verify_admin_email }}"
+          password: "{{ docmost_verify_admin_password }}"
+        status_code: [200]
+      register: docmost_login
+
+    - name: Assert that logging in yielded an authentication token
+      ansible.builtin.assert:
+        that:
+          - "'authToken' in docmost_login.cookies"
+          - docmost_login.cookies.authToken | length > 0
+        fail_msg: "Logging in did not set an authToken cookie"
+        success_msg: "Logging in with the stored password returned an authToken cookie"
+
+    - name: Ask for the version without authenticating
+      ansible.builtin.uri:
+        url: "{{ docmost_verify_base_url }}/api/version"
+        method: POST
+        body_format: json
+        body: {}
+        status_code: [401]
+      register: docmost_version_unauthenticated
+
+    - name: Assert that the version endpoint rejects unauthenticated callers
+      ansible.builtin.assert:
+        that: docmost_version_unauthenticated.status == 401
+        fail_msg: "Expected 401 without a token, got {{ docmost_version_unauthenticated.status }}"
+        success_msg: "The version endpoint rejects unauthenticated callers, so answering it proves the token works"
+
+    # The same endpoint, this time with the token, has to answer. Only the status
+    # is looked at: Docmost's version handler starts by asking api.github.com what
+    # the newest release is and, if that answers anything other than 2xx, returns
+    # from the handler without a value - so the body is empty whenever GitHub
+    # rate-limits the runner. The version itself is read below instead.
+    - name: Ask for the version as the logged-in administrator
+      ansible.builtin.uri:
+        url: "{{ docmost_verify_base_url }}/api/version"
+        method: POST
+        body_format: json
+        body: {}
+        headers:
+          Cookie: "{{ docmost_login.cookies_string }}"
+        status_code: [200]
+      register: docmost_version_authenticated
+
+    - name: Assert that the token opens what the guard closed
+      ansible.builtin.assert:
+        that: docmost_version_authenticated.status == 200
+        fail_msg: "The token was not accepted ({{ docmost_version_authenticated.status }})"
+        success_msg: "The same request that was refused with 401 is answered with 200 once the login token is sent"
+
+    # Read out of the running container rather than out of the image the role was
+    # told to run, so that this reports the version of the code actually serving
+    # requests. Docmost's own version endpoint reads this very file.
+    - name: Read the version out of the running container
+      ansible.builtin.command:
+        argv:
+          - docker
+          - exec
+          - "{{ docmost_identifier }}"
+          - cat
+          - /app/package.json
+      register: docmost_package_json
+      changed_when: false
+
+    - name: Assert that the running Docmost is the version the role installs
+      ansible.builtin.assert:
+        that: (docmost_package_json.stdout | from_json).version is match('^' + (docmost_role_defaults.docmost_version | string | regex_escape))
+        fail_msg: "The running Docmost is version {{ (docmost_package_json.stdout | from_json).version }}, expected {{ docmost_role_defaults.docmost_version }}"
+        success_msg: "The running Docmost is version {{ (docmost_package_json.stdout | from_json).version }}"
+
+    # --------------------------------------------------------------------------
+    # Where the image came from
+    #
+    # The mirror image of what the `default-selfbuild` scenario asserts: with
+    # self-building off, the role has to run an image it pulled from a registry.
+    # --------------------------------------------------------------------------
+
+    - name: Inspect the container that is running
+      ansible.builtin.command:
+        argv:
+          - docker
+          - inspect
+          - "{{ docmost_identifier }}"
+      register: docmost_container_inspect
+      changed_when: false
+
+    - name: Assert that the service runs the upstream image at the version the role installs
+      ansible.builtin.assert:
+        that: (docmost_container_inspect.stdout | from_json | first).Config.Image == 'docker.io/docmost/docmost:' + (docmost_role_defaults.docmost_version | string)
+        fail_msg: "The container runs {{ (docmost_container_inspect.stdout | from_json | first).Config.Image }}"
+        success_msg: "The container runs {{ (docmost_container_inspect.stdout | from_json | first).Config.Image }}"
+
+    - name: Inspect the image the container runs
+      ansible.builtin.command:
+        argv:
+          - docker
+          - image
+          - inspect
+          - "{{ (docmost_container_inspect.stdout | from_json | first).Config.Image }}"
+      register: docmost_image_inspect
+      changed_when: false
+
+    # Only an image that came from a registry carries the digest it was pulled
+    # under, so this is what tells a pull apart from a local build.
+    - name: Assert that the image was pulled rather than built here
+      ansible.builtin.assert:
+        that: (docmost_image_inspect.stdout | from_json | first).RepoDigests | length > 0
+        fail_msg: "The image carries no registry digest, so it was not pulled"
+        success_msg: "The image carries a registry digest, so it was pulled from upstream"
+
+    # --------------------------------------------------------------------------
+    # Authenticated round-trip through Postgres
+    # --------------------------------------------------------------------------
+
+    - name: List the spaces of the workspace
+      ansible.builtin.uri:
+        url: "{{ docmost_verify_base_url }}/api/spaces"
+        method: POST
+        body_format: json
+        body: {}
+        headers:
+          Cookie: "{{ docmost_login.cookies_string }}"
+        status_code: [200]
+      register: docmost_spaces
+
+    - name: Assert that setup created a space to write into
+      ansible.builtin.assert:
+        that: docmost_spaces.json.data['items'] | length > 0
+        fail_msg: "Docmost returned no spaces"
+        success_msg: "Docmost returned {{ docmost_spaces.json.data['items'] | length }} space(s)"
+
+    - name: Create a page
+      ansible.builtin.uri:
+        url: "{{ docmost_verify_base_url }}/api/pages/create"
+        method: POST
+        body_format: json
+        body:
+          spaceId: "{{ docmost_spaces.json.data['items'][0].id }}"
+          title: "{{ docmost_verify_page_title }}"
+          content: "{{ docmost_verify_page_marker }}"
+          format: markdown
+        headers:
+          Cookie: "{{ docmost_login.cookies_string }}"
+        status_code: [200]
+      register: docmost_page_create
+
+    - name: Read the page back
+      ansible.builtin.uri:
+        url: "{{ docmost_verify_base_url }}/api/pages/info"
+        method: POST
+        body_format: json
+        body:
+          pageId: "{{ docmost_page_create.json.data.id }}"
+          includeContent: true
+        headers:
+          Cookie: "{{ docmost_login.cookies_string }}"
+        status_code: [200]
+      register: docmost_page_info
+
+    - name: Assert that the page reads back with the title and body it was created with
+      ansible.builtin.assert:
+        that:
+          - docmost_page_info.json.data.id == docmost_page_create.json.data.id
+          - docmost_page_info.json.data.title == docmost_verify_page_title
+          - docmost_verify_page_marker in (docmost_page_info.json.data.content | to_json)
+        fail_msg: "The page did not read back as written"
+        success_msg: "The page created over the API reads back with its title and body intact"
+
+    # Setup creates a space but no pages, so the page created above is the only
+    # row there is - which lets these read the whole table and stay free of any
+    # SQL string quoting.
+    - name: Read the pages straight out of Postgres
+      ansible.builtin.command:
+        argv: "{{ docmost_verify_psql_command + ['SELECT id, title FROM pages'] }}"
+      register: docmost_page_rows
+      changed_when: false
+
+    - name: Read the page bodies straight out of Postgres
+      ansible.builtin.command:
+        argv: "{{ docmost_verify_psql_command + ['SELECT content::text FROM pages'] }}"
+      register: docmost_page_content_rows
+      changed_when: false
+
+    - name: Assert that Postgres holds the page Docmost reported creating
+      ansible.builtin.assert:
+        that:
+          - docmost_page_rows.stdout_lines | map('trim') | list == [docmost_page_create.json.data.id + '|' + docmost_verify_page_title]
+          - docmost_verify_page_marker in docmost_page_content_rows.stdout
+        fail_msg: "Postgres does not hold the page as written, it holds: {{ docmost_page_rows.stdout_lines }}"
+        success_msg: "Postgres holds the page, with the id, title and body that went in over the API"
+
+    - name: Read the administrator straight out of Postgres
+      ansible.builtin.command:
+        argv: "{{ docmost_verify_psql_command + ['SELECT email FROM users'] }}"
+      register: docmost_users_row
+      changed_when: false
+
+    - name: Assert that Postgres holds the administrator created by setup
+      ansible.builtin.assert:
+        that: docmost_users_row.stdout_lines | map('trim') | select('equalto', docmost_verify_admin_email) | list | length == 1
+        fail_msg: "Expected exactly one user {{ docmost_verify_admin_email }} in Postgres, found: {{ docmost_users_row.stdout }}"
+        success_msg: "Postgres holds the administrator that setup created"
+
+    # --------------------------------------------------------------------------
+    # Valkey - the connection carries state, not just configuration
+    # --------------------------------------------------------------------------
+
+    - name: Look for Docmost session state in Valkey, after logging in
+      ansible.builtin.command:
+        argv: "{{ docmost_verify_valkey_scan_command + ['session:activity:*'] }}"
+      register: docmost_valkey_sessions
+      changed_when: false
+
+    - name: Assert that logging in put session state into Valkey
+      ansible.builtin.assert:
+        that: docmost_valkey_sessions.stdout_lines | select('match', '^session:activity:') | list | length > 0
+        fail_msg: "Valkey holds no session key, so Docmost is not really using it"
+        success_msg: "Logging in moved Valkey off the empty answer it gave before setup"
+
+    - name: Look for Docmost job queues in Valkey
+      ansible.builtin.command:
+        argv: "{{ docmost_verify_valkey_scan_command + ['bull:*'] }}"
+      register: docmost_valkey_queues
+      changed_when: false
+
+    - name: Assert that Docmost runs its job queues on Valkey
+      ansible.builtin.assert:
+        that: docmost_valkey_queues.stdout_lines | select('match', '^bull:') | list | length > 0
+        fail_msg: "Valkey holds no Docmost job queue"
+        success_msg: "Valkey holds Docmost's job queues"
+
+    # --------------------------------------------------------------------------
+    # Local storage - the data path the role bind-mounts is the one Docmost writes to
+    # --------------------------------------------------------------------------
+
+    # The file is looked up in this scenario's `files/` directory, which is where
+    # the uri action plugin resolves a relative multipart filename.
+    - name: Attach a file to the page
+      ansible.builtin.uri:
+        url: "{{ docmost_verify_base_url }}/api/files/upload"
+        method: POST
+        body_format: form-multipart
+        body:
+          pageId: "{{ docmost_page_create.json.data.id }}"
+          file:
+            filename: "{{ docmost_verify_attachment_name }}"
+            mime_type: text/plain
+        headers:
+          Cookie: "{{ docmost_login.cookies_string }}"
+        status_code: [200]
+      register: docmost_attachment
+
+    - name: Assert that Docmost accepted the attachment
+      ansible.builtin.assert:
+        that:
+          - docmost_attachment.json.fileName == docmost_verify_attachment_name
+          - docmost_attachment.json.pageId == docmost_page_create.json.data.id
+        fail_msg: "Docmost did not store the attachment"
+        success_msg: "Docmost stored the attachment against the page"
+
+    # Docmost reports where inside its storage directory it put the file, under an
+    # attachment id it generated itself, so nothing but Docmost writing through
+    # the bind mount can put a file of that size at that path on the host.
+    - name: Look for the file at the path Docmost says it wrote it to
+      ansible.builtin.stat:
+        path: "{{ docmost_data_path }}/{{ docmost_attachment.json.filePath }}"
+      register: docmost_stored_attachment
+
+    - name: Assert that the upload landed on the host, under the path the role mounts
+      ansible.builtin.assert:
+        that:
+          - docmost_attachment.json.filePath | length > 0
+          - docmost_stored_attachment.stat.exists
+          - docmost_stored_attachment.stat.size == docmost_attachment.json.fileSize
+        fail_msg: "{{ docmost_data_path }}/{{ docmost_attachment.json.filePath }} is not a {{ docmost_attachment.json.fileSize }}-byte file on the host, so the storage bind mount is not what Docmost writes to"
+        success_msg: "Docmost's upload is on the host at {{ docmost_data_path }}/{{ docmost_attachment.json.filePath }}, so the storage bind mount is live"
+
+    - name: Summarize what was verified
       ansible.builtin.debug:
         msg:
-          - "Docmost systemd: {{ docmost_service.status.ActiveState }}"
-          - "Docmost HTTP: {{ docmost_endpoint.status }}"
+          - "systemd: {{ docmost_identifier }}.service is {{ docmost_service.status.ActiveState }}"
+          - "version: {{ (docmost_package_json.stdout | from_json).version }} running (role installs {{ docmost_role_defaults.docmost_version }})"
+          - "workspace endpoint: 404 before setup, {{ docmost_workspace_after_setup.status }} after"
+          - "page: created over the API and read back out of Postgres"
+          - "valkey: {{ docmost_valkey_sessions.stdout_lines | length }} session key(s), {{ docmost_valkey_queues.stdout_lines | length }} queue key(s)"
+          - "storage: {{ docmost_attachment.json.fileSize }} bytes at {{ docmost_data_path }}/{{ docmost_attachment.json.filePath }}"

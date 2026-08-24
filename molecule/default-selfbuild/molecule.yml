@@ -43,6 +43,8 @@ provisioner:
 
         # Test self-building
         docmost_container_image_self_build: true
+        # Named here so that verify.yml can read the clone the role made.
+        docmost_container_image_self_build_src_files_path: /docmost/docker-src
 
         # Variables required for Docmost to connect to the Postgres database
         docmost_database_hostname: "{{ postgres_connection_hostname }}"
@@ -55,13 +57,15 @@ provisioner:
             (['postgres.service'])
           }}
 
-        # Variables required for Docmost to connect to the Valkey data-store
+        # Variables required for Docmost to connect to the Valkey data-store.
+        #
+        # docmost_environment_variable_redis_url is deliberately left alone, so that the
+        # connection URL the role builds out of these is the one under test.
         docmost_redis_hostname: "{{ valkey_identifier }}"
         docmost_container_additional_networks_custom:
           - "{{ valkey_container_network }}"
         docmost_systemd_required_services_list_custom:
           - "{{ valkey_identifier }}.service"
-        docmost_environment_variable_redis_url: "redis://{{ docmost_redis_hostname }}:{{ docmost_redis_port }}"
 
         # Variables for Postgres
         postgres_uid: 1000
