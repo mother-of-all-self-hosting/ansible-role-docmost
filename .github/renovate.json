@@ -1,5 +1,12 @@
 {
   "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+  "description": [
+    "Patch releases are deliberately not automerged here, unlike in some other roles in this fleet.",
+    "Docmost migrates its own database on startup. DatabaseModule.onApplicationBootstrap calls MigrationService.migrateToLatest() whenever NODE_ENV is production, which the image's own start script sets, and it runs every pending Kysely migration before the server accepts a single request. There is no down path: on a migration error it logs and calls process.exit(1), leaving the service in a crash loop. An automerged bump would therefore rewrite the schema of the database holding the users' wiki, unattended.",
+    "Patch releases do carry migrations. Of the 17 consecutive patch pairs published so far, v0.25.1 -> v0.25.2 added 20260205T214213-add-settings-to-spaces and v0.25.2 -> v0.25.3 added 20260209T120000-add-contributor_ids-to-page-history. Both happen to be additive column additions, but nothing about Docmost's release process reserves schema changes for minor releases, and Docmost is still 0.x software, where a third-component bump promises nothing at all.",
+    "The Molecule run on the pull request does not cover this. It installs onto an empty database, so it exercises the full migration chain from nothing - not the step from the previously released version's schema to the new one, which is the only migration an automerged bump would actually perform in production. Automerging would remove the human checkpoint without the tests having covered what the human is there to catch.",
+    "The version annotation in defaults/main.yml pins versioning=semver on purpose. docmost/docmost also publishes floating major.minor tags (0.95, 0.90, 0.80) and prerelease tags (0.96.0-beta.2, 0.95.1-beta.2, 0.80.1-cf-1); strict semver rejects the two-component tags outright, and Renovate's default ignoreUnstable keeps the prereleases out."
+  ],
   "extends": [
     "github>mother-of-all-self-hosting/renovate-config#v1.0.0"
   ]

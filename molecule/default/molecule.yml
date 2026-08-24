@@ -31,7 +31,14 @@ provisioner:
         # Helper variables
         docmost_debug_service_enabled: false
 
-        # Variables for Docmost
+        # Variables for Docmost.
+        #
+        # The three identifiers are named explicitly, rather than left to each role's
+        # own default, because verify.yml runs without any of those roles in scope and
+        # has to address the systemd service and the two containers by name.
+        docmost_identifier: docmost
+        postgres_identifier: postgres
+        valkey_identifier: valkey
         docmost_uid: 1000
         docmost_gid: 1000
         docmost_scheme: http
