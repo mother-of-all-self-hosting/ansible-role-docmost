@@ -8,6 +8,6 @@
     "The version annotation in defaults/main.yml pins versioning=semver on purpose. docmost/docmost also publishes floating major.minor tags (0.95, 0.90, 0.80) and prerelease tags (0.96.0-beta.2, 0.95.1-beta.2, 0.80.1-cf-1); strict semver rejects the two-component tags outright, and Renovate's default ignoreUnstable keeps the prereleases out."
   ],
   "extends": [
-    "github>mother-of-all-self-hosting/renovate-config#v1.0.0"
+    "github>mother-of-all-self-hosting/renovate-config#v1.1.0"
   ]
 }
