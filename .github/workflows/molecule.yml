@@ -157,7 +157,7 @@ jobs:
         uses: actions/cache@v6.1.0
         with:
           path: ~/.ansible/collections
-          key: ansible-collections-${{ hashFiles('docmost/molecule/*/requirements.yml') }}
+          key: ansible-collections-${{ hashFiles('docmost/molecule/default-selfbuild/requirements.yml') }}
 
       - name: Run Molecule
         working-directory: docmost
