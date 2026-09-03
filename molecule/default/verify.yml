@@ -485,12 +485,12 @@
         fail_msg: "{{ docmost_data_path }}/{{ docmost_attachment.json.filePath }} is not a {{ docmost_attachment.json.fileSize }}-byte file on the host, so the storage bind mount is not what Docmost writes to"
         success_msg: "Docmost's upload is on the host at {{ docmost_data_path }}/{{ docmost_attachment.json.filePath }}, so the storage bind mount is live"
 
-    - name: Summarize what was verified
+    - name: Show the Docmost verification summary
       ansible.builtin.debug:
         msg:
-          - "systemd: {{ docmost_identifier }}.service is {{ docmost_service.status.ActiveState }}"
-          - "version: {{ (docmost_package_json.stdout | from_json).version }} running (role installs {{ docmost_role_defaults.docmost_version }})"
-          - "workspace endpoint: 404 before setup, {{ docmost_workspace_after_setup.status }} after"
-          - "page: created over the API and read back out of Postgres"
-          - "valkey: {{ docmost_valkey_sessions.stdout_lines | length }} session key(s), {{ docmost_valkey_queues.stdout_lines | length }} queue key(s)"
-          - "storage: {{ docmost_attachment.json.fileSize }} bytes at {{ docmost_data_path }}/{{ docmost_attachment.json.filePath }}"
+          - "Docmost systemd: {{ docmost_identifier }}.service is {{ docmost_service.status.ActiveState }}"
+          - "Docmost version: {{ (docmost_package_json.stdout | from_json).version }} running (role installs {{ docmost_role_defaults.docmost_version }})"
+          - "Docmost workspace endpoint: 404 before setup, {{ docmost_workspace_after_setup.status }} after"
+          - "Docmost page: created over the API and read back out of Postgres"
+          - "Docmost valkey: {{ docmost_valkey_sessions.stdout_lines | length }} session key(s), {{ docmost_valkey_queues.stdout_lines | length }} queue key(s)"
+          - "Docmost storage: {{ docmost_attachment.json.fileSize }} bytes at {{ docmost_data_path }}/{{ docmost_attachment.json.filePath }}"

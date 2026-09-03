@@ -277,10 +277,10 @@
         fail_msg: "The page did not read back as written"
         success_msg: "The page created over the API reads back with its title and body intact"
 
-    - name: Summarize what was verified
+    - name: Show the Docmost verification summary
       ansible.builtin.debug:
         msg:
-          - "source: {{ docmost_container_image_self_build_src_files_path }} at {{ docmost_source_tag.stdout | trim }}"
-          - "image: {{ docmost_verify_self_build_image }}, built here (no registry digest)"
-          - "version: {{ (docmost_package_json.stdout | from_json).version }} running (role installs {{ docmost_role_defaults.docmost_version }})"
-          - "workspace endpoint: 404 before setup, workspace created and page round-tripped after"
+          - "Docmost source: {{ docmost_container_image_self_build_src_files_path }} at {{ docmost_source_tag.stdout | trim }}"
+          - "Docmost image: {{ docmost_verify_self_build_image }}, built here (no registry digest)"
+          - "Docmost version: {{ (docmost_package_json.stdout | from_json).version }} running (role installs {{ docmost_role_defaults.docmost_version }})"
+          - "Docmost workspace endpoint: 404 before setup, workspace created and page round-tripped after"
