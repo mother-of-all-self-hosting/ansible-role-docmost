@@ -272,11 +272,11 @@
       register: docmost_package_json
       changed_when: false
 
-    - name: Assert that the running Docmost is the version the role installs
+    - name: Assert the running Docmost is the version this role installs
       ansible.builtin.assert:
         that: (docmost_package_json.stdout | from_json).version is match('^' + (docmost_role_defaults.docmost_version | string | regex_escape))
-        fail_msg: "The running Docmost is version {{ (docmost_package_json.stdout | from_json).version }}, expected {{ docmost_role_defaults.docmost_version }}"
-        success_msg: "The running Docmost is version {{ (docmost_package_json.stdout | from_json).version }}"
+        fail_msg: "Docmost reports {{ (docmost_package_json.stdout | from_json).version | default('none') }}, expected {{ docmost_role_defaults.docmost_version }}"
+        success_msg: "Docmost reports {{ (docmost_package_json.stdout | from_json).version }}"
 
     # --------------------------------------------------------------------------
     # Where the image came from
