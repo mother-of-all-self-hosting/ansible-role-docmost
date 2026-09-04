@@ -59,13 +59,13 @@
       - --pattern
 
   tasks:
-    # Only leaf literals are read out of the role's defaults. Scenario-specific
-    # values arrive through molecule.yml's group_vars, and pulling the defaults
-    # file into the play's own namespace would override those with the role's.
-    - name: Read the role's defaults for leaf literals
+    # The role is not included in this playbook, so its defaults are not in
+    # scope. Reading defaults/main.yml directly ties the version assertion
+    # below.
+    - name: Load the role defaults
       ansible.builtin.include_vars:
         file: "{{ lookup('env', 'MOLECULE_PROJECT_DIRECTORY') }}/defaults/main.yml"
-        name: docmost_role_defaults
+        name: docmost_defaults
 
     # --------------------------------------------------------------------------
     # Readiness
@@ -274,8 +274,8 @@
 
     - name: Assert the running Docmost is the version this role installs
       ansible.builtin.assert:
-        that: (docmost_package_json.stdout | from_json).version is match('^' + (docmost_role_defaults.docmost_version | string | regex_escape))
-        fail_msg: "Docmost reports {{ (docmost_package_json.stdout | from_json).version | default('none') }}, expected {{ docmost_role_defaults.docmost_version }}"
+        that: (docmost_package_json.stdout | from_json).version is match('^' + (docmost_defaults.docmost_version | string | regex_escape))
+        fail_msg: "Docmost reports {{ (docmost_package_json.stdout | from_json).version | default('none') }}, expected {{ docmost_defaults.docmost_version }}"
         success_msg: "Docmost reports {{ (docmost_package_json.stdout | from_json).version }}"
 
     # --------------------------------------------------------------------------
@@ -296,7 +296,7 @@
 
     - name: Assert that the service runs the upstream image at the version the role installs
       ansible.builtin.assert:
-        that: (docmost_container_inspect.stdout | from_json | first).Config.Image == 'docker.io/docmost/docmost:' + (docmost_role_defaults.docmost_version | string)
+        that: (docmost_container_inspect.stdout | from_json | first).Config.Image == 'docker.io/docmost/docmost:' + (docmost_defaults.docmost_version | string)
         fail_msg: "The container runs {{ (docmost_container_inspect.stdout | from_json | first).Config.Image }}"
         success_msg: "The container runs {{ (docmost_container_inspect.stdout | from_json | first).Config.Image }}"
 
@@ -489,7 +489,7 @@
       ansible.builtin.debug:
         msg:
           - "Docmost systemd: {{ docmost_identifier }}.service is {{ docmost_service.status.ActiveState }}"
-          - "Docmost version: {{ (docmost_package_json.stdout | from_json).version }} running (role installs {{ docmost_role_defaults.docmost_version }})"
+          - "Docmost version: {{ (docmost_package_json.stdout | from_json).version }} running (role installs {{ docmost_defaults.docmost_version }})"
           - "Docmost workspace endpoint: 404 before setup, {{ docmost_workspace_after_setup.status }} after"
           - "Docmost page: created over the API and read back out of Postgres"
           - "Docmost valkey: {{ docmost_valkey_sessions.stdout_lines | length }} session key(s), {{ docmost_valkey_queues.stdout_lines | length }} queue key(s)"

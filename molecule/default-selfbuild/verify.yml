@@ -31,21 +31,21 @@
     docmost_verify_page_marker: molecule-selfbuild-roundtrip-marker-a91c
 
   tasks:
-    # Only leaf literals are read out of the role's defaults. Scenario-specific
-    # values arrive through molecule.yml's group_vars, and pulling the defaults
-    # file into the play's own namespace would override those with the role's.
-    - name: Read the role's defaults for leaf literals
+    # The role is not included in this playbook, so its defaults are not in
+    # scope. Reading defaults/main.yml directly ties the version assertion
+    # below.
+    - name: Load the role defaults
       ansible.builtin.include_vars:
         file: "{{ lookup('env', 'MOLECULE_PROJECT_DIRECTORY') }}/defaults/main.yml"
-        name: docmost_role_defaults
+        name: docmost_defaults
 
     # The role names a self-built image after the tag it checked out, which for a
     # pinned version is `v` followed by that version. Restated here rather than
     # read out of the role, so that the role and the test have to agree.
     - name: Name the image the role is expected to have built
       ansible.builtin.set_fact:
-        docmost_verify_self_build_tag: "v{{ docmost_role_defaults.docmost_version }}"
-        docmost_verify_self_build_image: "docmost/docmost:v{{ docmost_role_defaults.docmost_version }}"
+        docmost_verify_self_build_tag: "v{{ docmost_defaults.docmost_version }}"
+        docmost_verify_self_build_image: "docmost/docmost:v{{ docmost_defaults.docmost_version }}"
 
     # --------------------------------------------------------------------------
     # Readiness
@@ -225,8 +225,8 @@
 
     - name: Assert the running Docmost is the version this role installs
       ansible.builtin.assert:
-        that: (docmost_package_json.stdout | from_json).version is match('^' + (docmost_role_defaults.docmost_version | string | regex_escape))
-        fail_msg: "Docmost reports {{ (docmost_package_json.stdout | from_json).version | default('none') }}, expected {{ docmost_role_defaults.docmost_version }}"
+        that: (docmost_package_json.stdout | from_json).version is match('^' + (docmost_defaults.docmost_version | string | regex_escape))
+        fail_msg: "Docmost reports {{ (docmost_package_json.stdout | from_json).version | default('none') }}, expected {{ docmost_defaults.docmost_version }}"
         success_msg: "Docmost reports {{ (docmost_package_json.stdout | from_json).version }}"
 
     - name: List the spaces of the workspace
@@ -280,7 +280,7 @@
     - name: Show the Docmost verification summary
       ansible.builtin.debug:
         msg:
-          - "Docmost version: {{ (docmost_package_json.stdout | from_json).version }} running (role installs {{ docmost_role_defaults.docmost_version }})"
+          - "Docmost version: {{ (docmost_package_json.stdout | from_json).version }} running (role installs {{ docmost_defaults.docmost_version }})"
           - "Docmost source: {{ docmost_container_image_self_build_src_files_path }} at {{ docmost_source_tag.stdout | trim }}"
           - "Docmost image: {{ docmost_verify_self_build_image }}, built here (no registry digest)"
           - "Docmost workspace endpoint: 404 before setup, workspace created and page round-tripped after"
