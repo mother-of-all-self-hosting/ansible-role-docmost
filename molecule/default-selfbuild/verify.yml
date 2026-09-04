@@ -16,7 +16,7 @@
 # Postgres, keeps sessions in Valkey and writes uploads to the bind-mounted data
 # path does not depend on how the image was produced, so proving that is left to
 # the `default` scenario instead of being restated here.
-- name: Verify a self-built Docmost
+- name: Verify self-built Docmost
   hosts: all
   become: true
   gather_facts: false
