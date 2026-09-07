@@ -307,14 +307,14 @@
           - image
           - inspect
           - "{{ (docmost_container_raw.stdout | from_json | first).Config.Image }}"
-      register: docmost_image_inspect
+      register: docmost_image_raw
       changed_when: false
 
     # Only an image that came from a registry carries the digest it was pulled
     # under, so this is what tells a pull apart from a local build.
     - name: Assert that the image was pulled rather than built here
       ansible.builtin.assert:
-        that: (docmost_image_inspect.stdout | from_json | first).RepoDigests | length > 0
+        that: (docmost_image_raw.stdout | from_json | first).RepoDigests | length > 0
         fail_msg: "The image carries no registry digest, so it was not pulled"
         success_msg: "The image carries a registry digest, so it was pulled from upstream"
 

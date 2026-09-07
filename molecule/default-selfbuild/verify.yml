@@ -127,7 +127,7 @@
           - image
           - inspect
           - "{{ docmost_verify_self_build_image }}"
-      register: docmost_image_inspect
+      register: docmost_image_raw
       changed_when: false
 
     # An image that came from a registry carries the digest it was pulled under.
@@ -136,8 +136,8 @@
     # same way.
     - name: Assert that the image was built here rather than pulled
       ansible.builtin.assert:
-        that: (docmost_image_inspect.stdout | from_json | first).RepoDigests | length == 0
-        fail_msg: "{{ docmost_verify_self_build_image }} carries registry digests {{ (docmost_image_inspect.stdout | from_json | first).RepoDigests }}, so it was pulled, not built"
+        that: (docmost_image_raw.stdout | from_json | first).RepoDigests | length == 0
+        fail_msg: "{{ docmost_verify_self_build_image }} carries registry digests {{ (docmost_image_raw.stdout | from_json | first).RepoDigests }}, so it was pulled, not built"
         success_msg: "{{ docmost_verify_self_build_image }} carries no registry digest, so it was built on this machine"
 
     # --------------------------------------------------------------------------
