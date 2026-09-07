@@ -291,14 +291,14 @@
           - docker
           - inspect
           - "{{ docmost_identifier }}"
-      register: docmost_container_inspect
+      register: docmost_container_raw
       changed_when: false
 
     - name: Assert that the service runs the upstream image at the version the role installs
       ansible.builtin.assert:
-        that: (docmost_container_inspect.stdout | from_json | first).Config.Image == 'docker.io/docmost/docmost:' + (docmost_defaults.docmost_version | string)
-        fail_msg: "The container runs {{ (docmost_container_inspect.stdout | from_json | first).Config.Image }}"
-        success_msg: "The container runs {{ (docmost_container_inspect.stdout | from_json | first).Config.Image }}"
+        that: (docmost_container_raw.stdout | from_json | first).Config.Image == 'docker.io/docmost/docmost:' + (docmost_defaults.docmost_version | string)
+        fail_msg: "The container runs {{ (docmost_container_raw.stdout | from_json | first).Config.Image }}"
+        success_msg: "The container runs {{ (docmost_container_raw.stdout | from_json | first).Config.Image }}"
 
     - name: Inspect the image the container runs
       ansible.builtin.command:
@@ -306,7 +306,7 @@
           - docker
           - image
           - inspect
-          - "{{ (docmost_container_inspect.stdout | from_json | first).Config.Image }}"
+          - "{{ (docmost_container_raw.stdout | from_json | first).Config.Image }}"
       register: docmost_image_inspect
       changed_when: false
 

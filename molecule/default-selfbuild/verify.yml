@@ -111,13 +111,13 @@
           - docker
           - inspect
           - "{{ docmost_identifier }}"
-      register: docmost_container_inspect
+      register: docmost_container_raw
       changed_when: false
 
     - name: Assert that the service runs on the self-built image
       ansible.builtin.assert:
-        that: (docmost_container_inspect.stdout | from_json | first).Config.Image == docmost_verify_self_build_image
-        fail_msg: "The container runs {{ (docmost_container_inspect.stdout | from_json | first).Config.Image }}, expected {{ docmost_verify_self_build_image }}"
+        that: (docmost_container_raw.stdout | from_json | first).Config.Image == docmost_verify_self_build_image
+        fail_msg: "The container runs {{ (docmost_container_raw.stdout | from_json | first).Config.Image }}, expected {{ docmost_verify_self_build_image }}"
         success_msg: "The container runs {{ docmost_verify_self_build_image }}"
 
     - name: Inspect the image the container runs
