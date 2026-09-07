@@ -52,20 +52,26 @@
     # --------------------------------------------------------------------------
 
     - name: Wait for the Docmost systemd service to become active
-      ansible.builtin.systemd:
+      ansible.builtin.systemd_service:
         name: "{{ docmost_identifier }}.service"
       register: docmost_service
       until: docmost_service.status.ActiveState == 'active'
       retries: 36
       delay: 5
+      # So that giving up is reported by the assertion below rather than as a
+      # wall of systemd unit properties.
+      failed_when: false
 
-    - name: Assert that the Docmost systemd service is active
+    # `Restart=always` in the systemd unit means that even a container which crashes
+    # and gets restarted reads as active here, so this is a precondition rather than
+    # a result.
+    - name: Assert the Docmost systemd service is active
       ansible.builtin.assert:
         that: docmost_service.status.ActiveState == 'active'
-        fail_msg: "{{ docmost_identifier }}.service is {{ docmost_service.status.ActiveState }}, not active"
+        fail_msg: "{{ docmost_identifier }}.service is not active ({{ docmost_service.status.ActiveState }})"
         success_msg: "{{ docmost_identifier }}.service is active"
 
-    - name: Retrieve the Docmost service log for debugging
+    - name: Retrieve the Docmost systemd service log for debugging
       when: docmost_debug_service_enabled | bool
       ansible.builtin.command:
         cmd: "journalctl -xeu {{ docmost_identifier }}.service"
