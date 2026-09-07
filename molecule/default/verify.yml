@@ -221,7 +221,7 @@
         fail_msg: "Logging in did not set an authToken cookie"
         success_msg: "Logging in with the stored password returned an authToken cookie"
 
-    - name: Ask for the version without authenticating
+    - name: Query the version of the running Docmost without authenticating
       ansible.builtin.uri:
         url: "{{ docmost_verify_base_url }}/api/version"
         method: POST
@@ -241,7 +241,7 @@
     # the newest release is and, if that answers anything other than 2xx, returns
     # from the handler without a value - so the body is empty whenever GitHub
     # rate-limits the runner. The version itself is read below instead.
-    - name: Ask for the version as the logged-in administrator
+    - name: Query the version of the running Docmost as the logged-in administrator
       ansible.builtin.uri:
         url: "{{ docmost_verify_base_url }}/api/version"
         method: POST
