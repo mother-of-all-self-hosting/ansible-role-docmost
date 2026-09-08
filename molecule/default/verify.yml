@@ -269,12 +269,7 @@
     # requests. Docmost's own version endpoint reads this very file.
     - name: Read the version out of the running container
       ansible.builtin.command:
-        argv:
-          - docker
-          - exec
-          - "{{ docmost_identifier }}"
-          - cat
-          - /app/package.json
+        cmd: docker exec {{ docmost_identifier }} cat /app/package.json
       register: docmost_package_json
       changed_when: false
 
@@ -293,10 +288,7 @@
 
     - name: Inspect the container that is running
       ansible.builtin.command:
-        argv:
-          - docker
-          - inspect
-          - "{{ docmost_identifier }}"
+        cmd: docker container inspect {{ docmost_identifier }}
       register: docmost_container_raw
       changed_when: false
 
@@ -308,11 +300,9 @@
 
     - name: Inspect the image the container runs
       ansible.builtin.command:
-        argv:
-          - docker
-          - image
-          - inspect
-          - "{{ (docmost_container_raw.stdout | from_json | first).Config.Image }}"
+        cmd: >-
+          docker image inspect
+          {{ (docmost_container_raw.stdout | from_json | first).Config.Image }}
       register: docmost_image_raw
       changed_when: false
 
