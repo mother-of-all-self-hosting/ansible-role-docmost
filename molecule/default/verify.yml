@@ -71,7 +71,7 @@
     # Readiness
     # --------------------------------------------------------------------------
 
-    - name: Wait for the Docmost systemd service to become active
+    - name: Wait for the Docmost systemd service to become active (up to 180s)
       ansible.builtin.systemd_service:
         name: "{{ docmost_identifier }}.service"
       register: docmost_service
