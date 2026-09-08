@@ -74,7 +74,7 @@
     - name: Retrieve the Docmost systemd service log for debugging
       when: docmost_debug_service_enabled | bool
       ansible.builtin.command:
-        cmd: "journalctl -xeu {{ docmost_identifier }}.service"
+        cmd: "journalctl --no-pager --output=cat --unit={{ docmost_identifier }}.service"
       changed_when: false
 
     - name: Wait for Docmost to start serving HTTP
