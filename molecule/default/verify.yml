@@ -485,7 +485,7 @@
       ansible.builtin.debug:
         msg:
           - "Docmost systemd: {{ docmost_identifier }}.service is {{ docmost_service.status.ActiveState }}"
-          - "Docmost version: {{ (docmost_package_json.stdout | from_json).version }} running (role installs {{ docmost_defaults.docmost_version }})"
+          - "Docmost version: {{ (docmost_package_json.stdout | from_json).version }}"
           - "Docmost workspace endpoint: 404 before setup, {{ docmost_workspace_after_setup.status }} after"
           - "Docmost page: created over the API and read back out of Postgres"
           - "Docmost valkey: {{ docmost_valkey_sessions.stdout_lines | length }} session key(s), {{ docmost_valkey_queues.stdout_lines | length }} queue key(s)"
