@@ -31,6 +31,8 @@
     docmost_verify_page_marker: molecule-selfbuild-roundtrip-marker-a91c
 
   tasks:
+    - name: Verify that Docmost works
+      block:
     # The role is not included in this playbook, so its defaults are not in
     # scope. Reading defaults/main.yml directly ties the version assertion
     # below.
@@ -278,3 +280,19 @@
           - "Docmost source: {{ docmost_container_image_self_build_src_files_path }} at {{ docmost_source_tag.stdout | trim }}"
           - "Docmost image: {{ docmost_verify_self_build_image }}, built here (no registry digest)"
           - "Docmost workspace endpoint: 404 before setup, workspace created and page round-tripped after"
+
+      rescue:
+        # Whatever went wrong, the reason is almost always in the systemd service log.
+        - name: Retrieve the Docmost systemd service log
+          ansible.builtin.command:
+            cmd: "journalctl --no-pager --output=cat --unit={{ docmost_identifier }}.service"
+          register: docmost_service_log
+          changed_when: false
+
+        - name: Show the Docmost systemd service log
+          ansible.builtin.debug:
+            var: docmost_service_log.stdout_lines
+
+        - name: Fail because verification did not pass
+          ansible.builtin.fail:
+            msg: "Docmost verification failed. The systemd service log is printed above."

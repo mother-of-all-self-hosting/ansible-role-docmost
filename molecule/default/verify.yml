@@ -59,6 +59,8 @@
       - --pattern
 
   tasks:
+    - name: Verify that Docmost works
+      block:
     # The role is not included in this playbook, so its defaults are not in
     # scope. Reading defaults/main.yml directly ties the version assertion
     # below.
@@ -490,3 +492,19 @@
           - "Docmost page: created over the API and read back out of Postgres"
           - "Docmost valkey: {{ docmost_valkey_sessions.stdout_lines | length }} session key(s), {{ docmost_valkey_queues.stdout_lines | length }} queue key(s)"
           - "Docmost storage: {{ docmost_attachment.json.fileSize }} bytes at {{ docmost_data_path }}/{{ docmost_attachment.json.filePath }}"
+
+      rescue:
+        # Whatever went wrong, the reason is almost always in the systemd service log.
+        - name: Retrieve the Docmost systemd service log
+          ansible.builtin.command:
+            cmd: "journalctl --no-pager --output=cat --unit={{ docmost_identifier }}.service"
+          register: docmost_service_log
+          changed_when: false
+
+        - name: Show the Docmost systemd service log
+          ansible.builtin.debug:
+            var: docmost_service_log.stdout_lines
+
+        - name: Fail because verification did not pass
+          ansible.builtin.fail:
+            msg: "Docmost verification failed. The systemd service log is printed above."
