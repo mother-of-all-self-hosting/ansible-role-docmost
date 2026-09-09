@@ -33,253 +33,253 @@
   tasks:
     - name: Verify that Docmost works
       block:
-    # The role is not included in this playbook, so its defaults are not in
-    # scope. Reading defaults/main.yml directly ties the version assertion
-    # below.
-    - name: Load the role defaults
-      ansible.builtin.include_vars:
-        file: "{{ lookup('env', 'MOLECULE_PROJECT_DIRECTORY') }}/defaults/main.yml"
-        name: docmost_defaults
+        # The role is not included in this playbook, so its defaults are not in
+        # scope. Reading defaults/main.yml directly ties the version assertion
+        # below.
+        - name: Load the role defaults
+          ansible.builtin.include_vars:
+            file: "{{ lookup('env', 'MOLECULE_PROJECT_DIRECTORY') }}/defaults/main.yml"
+            name: docmost_defaults
 
-    # The role names a self-built image after the tag it checked out, which for a
-    # pinned version is `v` followed by that version. Restated here rather than
-    # read out of the role, so that the role and the test have to agree.
-    - name: Name the image the role is expected to have built
-      ansible.builtin.set_fact:
-        docmost_verify_self_build_tag: "v{{ docmost_defaults.docmost_version }}"
-        docmost_verify_self_build_image: "docmost/docmost:v{{ docmost_defaults.docmost_version }}"
+        # The role names a self-built image after the tag it checked out, which for a
+        # pinned version is `v` followed by that version. Restated here rather than
+        # read out of the role, so that the role and the test have to agree.
+        - name: Name the image the role is expected to have built
+          ansible.builtin.set_fact:
+            docmost_verify_self_build_tag: "v{{ docmost_defaults.docmost_version }}"
+            docmost_verify_self_build_image: "docmost/docmost:v{{ docmost_defaults.docmost_version }}"
 
-    # --------------------------------------------------------------------------
-    # Readiness
-    # --------------------------------------------------------------------------
+        # --------------------------------------------------------------------------
+        # Readiness
+        # --------------------------------------------------------------------------
 
-    - name: Wait for the Docmost systemd service to become active (up to 180s)
-      ansible.builtin.systemd_service:
-        name: "{{ docmost_identifier }}.service"
-      register: docmost_service
-      until: docmost_service.status.ActiveState == 'active'
-      retries: 36
-      delay: 5
-      # So that giving up is reported by the assertion below rather than as a
-      # wall of systemd unit properties.
-      failed_when: false
+        - name: Wait for the Docmost systemd service to become active (up to 180s)
+          ansible.builtin.systemd_service:
+            name: "{{ docmost_identifier }}.service"
+          register: docmost_service
+          until: docmost_service.status.ActiveState == 'active'
+          retries: 36
+          delay: 5
+          # So that giving up is reported by the assertion below rather than as a
+          # wall of systemd unit properties.
+          failed_when: false
 
-    # `Restart=always` in the systemd unit means that even a container which crashes
-    # and gets restarted reads as active here, so this is a precondition rather than
-    # a result.
-    - name: Assert the Docmost systemd service is active
-      ansible.builtin.assert:
-        that: docmost_service.status.ActiveState == 'active'
-        fail_msg: "{{ docmost_identifier }}.service is not active ({{ docmost_service.status.ActiveState }})"
-        success_msg: "{{ docmost_identifier }}.service is active"
+        # `Restart=always` in the systemd unit means that even a container which crashes
+        # and gets restarted reads as active here, so this is a precondition rather than
+        # a result.
+        - name: Assert the Docmost systemd service is active
+          ansible.builtin.assert:
+            that: docmost_service.status.ActiveState == 'active'
+            fail_msg: "{{ docmost_identifier }}.service is not active ({{ docmost_service.status.ActiveState }})"
+            success_msg: "{{ docmost_identifier }}.service is active"
 
-    - name: Retrieve the Docmost systemd service log for debugging
-      when: docmost_debug_service_enabled | bool
-      ansible.builtin.command:
-        cmd: "journalctl --no-pager --output=cat --unit={{ docmost_identifier }}.service"
-      changed_when: false
+        - name: Retrieve the Docmost systemd service log for debugging
+          when: docmost_debug_service_enabled | bool
+          ansible.builtin.command:
+            cmd: "journalctl --no-pager --output=cat --unit={{ docmost_identifier }}.service"
+          changed_when: false
 
-    - name: Wait for Docmost to start serving HTTP
-      ansible.builtin.uri:
-        url: "{{ docmost_verify_base_url }}/"
-        method: GET
-        status_code: [200]
-        follow_redirects: none
-      register: docmost_frontend_before_setup
-      until: docmost_frontend_before_setup.status == 200
-      retries: 120
-      delay: 5
+        - name: Wait for Docmost to start serving HTTP
+          ansible.builtin.uri:
+            url: "{{ docmost_verify_base_url }}/"
+            method: GET
+            status_code: [200]
+            follow_redirects: none
+          register: docmost_frontend_before_setup
+          until: docmost_frontend_before_setup.status == 200
+          retries: 120
+          delay: 5
 
-    # --------------------------------------------------------------------------
-    # Where the image came from
-    # --------------------------------------------------------------------------
+        # --------------------------------------------------------------------------
+        # Where the image came from
+        # --------------------------------------------------------------------------
 
-    - name: Read the source checkout the role cloned
-      ansible.builtin.command:
-        argv:
-          - git
-          - -C
-          - "{{ docmost_container_image_self_build_src_files_path }}"
-          - describe
-          - --tags
-          - --exact-match
-          - HEAD
-      register: docmost_source_tag
-      changed_when: false
+        - name: Read the source checkout the role cloned
+          ansible.builtin.command:
+            argv:
+              - git
+              - -C
+              - "{{ docmost_container_image_self_build_src_files_path }}"
+              - describe
+              - --tags
+              - --exact-match
+              - HEAD
+          register: docmost_source_tag
+          changed_when: false
 
-    - name: Assert that the clone sits on the tag matching the version the role installs
-      ansible.builtin.assert:
-        that: docmost_source_tag.stdout | trim == docmost_verify_self_build_tag
-        fail_msg: "The clone is at {{ docmost_source_tag.stdout | trim }}, expected {{ docmost_verify_self_build_tag }}"
-        success_msg: "The clone under {{ docmost_container_image_self_build_src_files_path }} is at {{ docmost_verify_self_build_tag }}"
+        - name: Assert that the clone sits on the tag matching the version the role installs
+          ansible.builtin.assert:
+            that: docmost_source_tag.stdout | trim == docmost_verify_self_build_tag
+            fail_msg: "The clone is at {{ docmost_source_tag.stdout | trim }}, expected {{ docmost_verify_self_build_tag }}"
+            success_msg: "The clone under {{ docmost_container_image_self_build_src_files_path }} is at {{ docmost_verify_self_build_tag }}"
 
-    - name: Inspect the container that is running
-      ansible.builtin.command:
-        cmd: docker container inspect {{ docmost_identifier }}
-      register: docmost_container_raw
-      changed_when: false
+        - name: Inspect the container that is running
+          ansible.builtin.command:
+            cmd: docker container inspect {{ docmost_identifier }}
+          register: docmost_container_raw
+          changed_when: false
 
-    - name: Assert that the service runs on the self-built image
-      ansible.builtin.assert:
-        that: (docmost_container_raw.stdout | from_json | first).Config.Image == docmost_verify_self_build_image
-        fail_msg: "The container runs {{ (docmost_container_raw.stdout | from_json | first).Config.Image }}, expected {{ docmost_verify_self_build_image }}"
-        success_msg: "The container runs {{ docmost_verify_self_build_image }}"
+        - name: Assert that the service runs on the self-built image
+          ansible.builtin.assert:
+            that: (docmost_container_raw.stdout | from_json | first).Config.Image == docmost_verify_self_build_image
+            fail_msg: "The container runs {{ (docmost_container_raw.stdout | from_json | first).Config.Image }}, expected {{ docmost_verify_self_build_image }}"
+            success_msg: "The container runs {{ docmost_verify_self_build_image }}"
 
-    - name: Inspect the image the container runs
-      ansible.builtin.command:
-        cmd: docker image inspect {{ docmost_verify_self_build_image }}
-      register: docmost_image_raw
-      changed_when: false
+        - name: Inspect the image the container runs
+          ansible.builtin.command:
+            cmd: docker image inspect {{ docmost_verify_self_build_image }}
+          register: docmost_image_raw
+          changed_when: false
 
-    # An image that came from a registry carries the digest it was pulled under.
-    # An image that was built on this machine has never had one, which is what
-    # separates a genuine self-build from a pull that happened to be tagged the
-    # same way.
-    - name: Assert that the image was built here rather than pulled
-      ansible.builtin.assert:
-        that: (docmost_image_raw.stdout | from_json | first).RepoDigests | length == 0
-        fail_msg: "{{ docmost_verify_self_build_image }} carries registry digests {{ (docmost_image_raw.stdout | from_json | first).RepoDigests }}, so it was pulled, not built"
-        success_msg: "{{ docmost_verify_self_build_image }} carries no registry digest, so it was built on this machine"
+        # An image that came from a registry carries the digest it was pulled under.
+        # An image that was built on this machine has never had one, which is what
+        # separates a genuine self-build from a pull that happened to be tagged the
+        # same way.
+        - name: Assert that the image was built here rather than pulled
+          ansible.builtin.assert:
+            that: (docmost_image_raw.stdout | from_json | first).RepoDigests | length == 0
+            fail_msg: "{{ docmost_verify_self_build_image }} carries registry digests {{ (docmost_image_raw.stdout | from_json | first).RepoDigests }}, so it was pulled, not built"
+            success_msg: "{{ docmost_verify_self_build_image }} carries no registry digest, so it was built on this machine"
 
-    # --------------------------------------------------------------------------
-    # Negative control - the self-built image serves, and is not yet usable
-    # --------------------------------------------------------------------------
+        # --------------------------------------------------------------------------
+        # Negative control - the self-built image serves, and is not yet usable
+        # --------------------------------------------------------------------------
 
-    - name: Assert that the frontend answers 200 even though no workspace exists
-      ansible.builtin.assert:
-        that: docmost_frontend_before_setup.status == 200
-        fail_msg: "Docmost did not serve its frontend"
-        success_msg: "Docmost serves its frontend with 200 - which, on its own, is not evidence of a working instance"
+        - name: Assert that the frontend answers 200 even though no workspace exists
+          ansible.builtin.assert:
+            that: docmost_frontend_before_setup.status == 200
+            fail_msg: "Docmost did not serve its frontend"
+            success_msg: "Docmost serves its frontend with 200 - which, on its own, is not evidence of a working instance"
 
-    - name: Ask an endpoint that has to reach the database, before setup
-      ansible.builtin.uri:
-        url: "{{ docmost_verify_base_url }}/api/workspace/public"
-        method: POST
-        body_format: json
-        body: {}
-        status_code: [404]
-      register: docmost_workspace_before_setup
+        - name: Ask an endpoint that has to reach the database, before setup
+          ansible.builtin.uri:
+            url: "{{ docmost_verify_base_url }}/api/workspace/public"
+            method: POST
+            body_format: json
+            body: {}
+            status_code: [404]
+          register: docmost_workspace_before_setup
 
-    - name: Assert that Docmost reports having no workspace
-      ansible.builtin.assert:
-        that:
-          - docmost_workspace_before_setup.status == 404
-          - docmost_workspace_before_setup.json.message == 'Workspace not found'
-        fail_msg: "Expected a 404 'Workspace not found', got {{ docmost_workspace_before_setup.status }}"
-        success_msg: "Requests that reach the database report that no workspace exists"
+        - name: Assert that Docmost reports having no workspace
+          ansible.builtin.assert:
+            that:
+              - docmost_workspace_before_setup.status == 404
+              - docmost_workspace_before_setup.json.message == 'Workspace not found'
+            fail_msg: "Expected a 404 'Workspace not found', got {{ docmost_workspace_before_setup.status }}"
+            success_msg: "Requests that reach the database report that no workspace exists"
 
-    # --------------------------------------------------------------------------
-    # The image that was built actually runs Docmost
-    # --------------------------------------------------------------------------
+        # --------------------------------------------------------------------------
+        # The image that was built actually runs Docmost
+        # --------------------------------------------------------------------------
 
-    - name: Complete the first-run workspace setup
-      ansible.builtin.uri:
-        url: "{{ docmost_verify_base_url }}/api/auth/setup"
-        method: POST
-        body_format: json
-        body:
-          workspaceName: "{{ docmost_verify_workspace_name }}"
-          name: "{{ docmost_verify_admin_name }}"
-          email: "{{ docmost_verify_admin_email }}"
-          password: "{{ docmost_verify_admin_password }}"
-        status_code: [200]
-      register: docmost_setup
+        - name: Complete the first-run workspace setup
+          ansible.builtin.uri:
+            url: "{{ docmost_verify_base_url }}/api/auth/setup"
+            method: POST
+            body_format: json
+            body:
+              workspaceName: "{{ docmost_verify_workspace_name }}"
+              name: "{{ docmost_verify_admin_name }}"
+              email: "{{ docmost_verify_admin_email }}"
+              password: "{{ docmost_verify_admin_password }}"
+            status_code: [200]
+          register: docmost_setup
 
-    - name: Assert that setup created the workspace
-      ansible.builtin.assert:
-        that: docmost_setup.json.data.name == docmost_verify_workspace_name
-        fail_msg: "Setup returned workspace {{ docmost_setup.json.data.name | default('none') }}"
-        success_msg: "Setup created the workspace '{{ docmost_setup.json.data.name }}'"
+        - name: Assert that setup created the workspace
+          ansible.builtin.assert:
+            that: docmost_setup.json.data.name == docmost_verify_workspace_name
+            fail_msg: "Setup returned workspace {{ docmost_setup.json.data.name | default('none') }}"
+            success_msg: "Setup created the workspace '{{ docmost_setup.json.data.name }}'"
 
-    - name: Log in as the administrator created by setup
-      ansible.builtin.uri:
-        url: "{{ docmost_verify_base_url }}/api/auth/login"
-        method: POST
-        body_format: json
-        body:
-          email: "{{ docmost_verify_admin_email }}"
-          password: "{{ docmost_verify_admin_password }}"
-        status_code: [200]
-      register: docmost_login
+        - name: Log in as the administrator created by setup
+          ansible.builtin.uri:
+            url: "{{ docmost_verify_base_url }}/api/auth/login"
+            method: POST
+            body_format: json
+            body:
+              email: "{{ docmost_verify_admin_email }}"
+              password: "{{ docmost_verify_admin_password }}"
+            status_code: [200]
+          register: docmost_login
 
-    - name: Assert that logging in yielded an authentication token
-      ansible.builtin.assert:
-        that:
-          - "'authToken' in docmost_login.cookies"
-          - docmost_login.cookies.authToken | length > 0
-        fail_msg: "Logging in did not set an authToken cookie"
-        success_msg: "Logging in with the stored password returned an authToken cookie"
+        - name: Assert that logging in yielded an authentication token
+          ansible.builtin.assert:
+            that:
+              - "'authToken' in docmost_login.cookies"
+              - docmost_login.cookies.authToken | length > 0
+            fail_msg: "Logging in did not set an authToken cookie"
+            success_msg: "Logging in with the stored password returned an authToken cookie"
 
-    # The version baked into the image, read out of the container that is serving
-    # requests. This closes the loop on the build: the tag that was checked out is
-    # the source the running server was compiled from.
-    - name: Read the version out of the running container
-      ansible.builtin.command:
-        cmd: docker exec {{ docmost_identifier }} cat /app/package.json
-      register: docmost_package_json
-      changed_when: false
+        # The version baked into the image, read out of the container that is serving
+        # requests. This closes the loop on the build: the tag that was checked out is
+        # the source the running server was compiled from.
+        - name: Read the version out of the running container
+          ansible.builtin.command:
+            cmd: docker exec {{ docmost_identifier }} cat /app/package.json
+          register: docmost_package_json
+          changed_when: false
 
-    - name: Assert the running Docmost is the version this role installs
-      ansible.builtin.assert:
-        that: (docmost_package_json.stdout | from_json).version is match('^' + (docmost_defaults.docmost_version | string | regex_escape))
-        fail_msg: "Docmost reports {{ (docmost_package_json.stdout | from_json).version | default('none') }}, expected {{ docmost_defaults.docmost_version }}"
-        success_msg: "Docmost reports {{ (docmost_package_json.stdout | from_json).version }}"
+        - name: Assert the running Docmost is the version this role installs
+          ansible.builtin.assert:
+            that: (docmost_package_json.stdout | from_json).version is match('^' + (docmost_defaults.docmost_version | string | regex_escape))
+            fail_msg: "Docmost reports {{ (docmost_package_json.stdout | from_json).version | default('none') }}, expected {{ docmost_defaults.docmost_version }}"
+            success_msg: "Docmost reports {{ (docmost_package_json.stdout | from_json).version }}"
 
-    - name: List the spaces of the workspace
-      ansible.builtin.uri:
-        url: "{{ docmost_verify_base_url }}/api/spaces"
-        method: POST
-        body_format: json
-        body: {}
-        headers:
-          Cookie: "{{ docmost_login.cookies_string }}"
-        status_code: [200]
-      register: docmost_spaces
+        - name: List the spaces of the workspace
+          ansible.builtin.uri:
+            url: "{{ docmost_verify_base_url }}/api/spaces"
+            method: POST
+            body_format: json
+            body: {}
+            headers:
+              Cookie: "{{ docmost_login.cookies_string }}"
+            status_code: [200]
+          register: docmost_spaces
 
-    - name: Create a page
-      ansible.builtin.uri:
-        url: "{{ docmost_verify_base_url }}/api/pages/create"
-        method: POST
-        body_format: json
-        body:
-          spaceId: "{{ docmost_spaces.json.data['items'][0].id }}"
-          title: "{{ docmost_verify_page_title }}"
-          content: "{{ docmost_verify_page_marker }}"
-          format: markdown
-        headers:
-          Cookie: "{{ docmost_login.cookies_string }}"
-        status_code: [200]
-      register: docmost_page_create
+        - name: Create a page
+          ansible.builtin.uri:
+            url: "{{ docmost_verify_base_url }}/api/pages/create"
+            method: POST
+            body_format: json
+            body:
+              spaceId: "{{ docmost_spaces.json.data['items'][0].id }}"
+              title: "{{ docmost_verify_page_title }}"
+              content: "{{ docmost_verify_page_marker }}"
+              format: markdown
+            headers:
+              Cookie: "{{ docmost_login.cookies_string }}"
+            status_code: [200]
+          register: docmost_page_create
 
-    - name: Read the page back
-      ansible.builtin.uri:
-        url: "{{ docmost_verify_base_url }}/api/pages/info"
-        method: POST
-        body_format: json
-        body:
-          pageId: "{{ docmost_page_create.json.data.id }}"
-          includeContent: true
-        headers:
-          Cookie: "{{ docmost_login.cookies_string }}"
-        status_code: [200]
-      register: docmost_page_info
+        - name: Read the page back
+          ansible.builtin.uri:
+            url: "{{ docmost_verify_base_url }}/api/pages/info"
+            method: POST
+            body_format: json
+            body:
+              pageId: "{{ docmost_page_create.json.data.id }}"
+              includeContent: true
+            headers:
+              Cookie: "{{ docmost_login.cookies_string }}"
+            status_code: [200]
+          register: docmost_page_info
 
-    - name: Assert that the page reads back with the title and body it was created with
-      ansible.builtin.assert:
-        that:
-          - docmost_page_info.json.data.id == docmost_page_create.json.data.id
-          - docmost_page_info.json.data.title == docmost_verify_page_title
-          - docmost_verify_page_marker in (docmost_page_info.json.data.content | to_json)
-        fail_msg: "The page did not read back as written"
-        success_msg: "The page created over the API reads back with its title and body intact"
+        - name: Assert that the page reads back with the title and body it was created with
+          ansible.builtin.assert:
+            that:
+              - docmost_page_info.json.data.id == docmost_page_create.json.data.id
+              - docmost_page_info.json.data.title == docmost_verify_page_title
+              - docmost_verify_page_marker in (docmost_page_info.json.data.content | to_json)
+            fail_msg: "The page did not read back as written"
+            success_msg: "The page created over the API reads back with its title and body intact"
 
-    - name: Show the Docmost verification summary
-      ansible.builtin.debug:
-        msg:
-          - "Docmost version: {{ (docmost_package_json.stdout | from_json).version }}"
-          - "Docmost source: {{ docmost_container_image_self_build_src_files_path }} at {{ docmost_source_tag.stdout | trim }}"
-          - "Docmost image: {{ docmost_verify_self_build_image }}, built here (no registry digest)"
-          - "Docmost workspace endpoint: 404 before setup, workspace created and page round-tripped after"
+        - name: Show the Docmost verification summary
+          ansible.builtin.debug:
+            msg:
+              - "Docmost version: {{ (docmost_package_json.stdout | from_json).version }}"
+              - "Docmost source: {{ docmost_container_image_self_build_src_files_path }} at {{ docmost_source_tag.stdout | trim }}"
+              - "Docmost image: {{ docmost_verify_self_build_image }}, built here (no registry digest)"
+              - "Docmost workspace endpoint: 404 before setup, workspace created and page round-tripped after"
 
       rescue:
         # Whatever went wrong, the reason is almost always in the systemd service log.
