@@ -36,7 +36,6 @@ provisioner:
         # The identifier is named explicitly, rather than left to the role's own default,
         # because verify.yml runs without the role in scope and has to address the systemd
         # service and the container by name.
-        docmost_identifier: docmost
         docmost_uid: 1000
         docmost_gid: 1000
         docmost_scheme: http
