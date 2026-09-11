@@ -58,6 +58,11 @@
       - --scan
       - --pattern
 
+    docmost_verify_units:
+      - docmost.service
+      - postgres.service
+      - valkey.service
+
   tasks:
     - name: Verify that Docmost works
       block:
@@ -73,13 +78,14 @@
         # Readiness
         # --------------------------------------------------------------------------
 
-        - name: Wait for the Docmost systemd service to become active (up to 180s)
+        - name: Wait for the Docmost systemd services to become active (up to 180s each)
           ansible.builtin.systemd_service:
-            name: docmost.service
-          register: docmost_service
-          until: docmost_service.status.ActiveState == 'active'
+            name: "{{ item }}"
+          register: docmost_services
+          until: docmost_services.status.ActiveState == 'active'
           retries: 36
           delay: 5
+          loop: "{{ docmost_verify_units }}"
           # So that giving up is reported by the assertion below rather than as a
           # wall of systemd unit properties.
           failed_when: false
@@ -87,17 +93,20 @@
         # `Restart=always` in the systemd unit means that even a container which crashes
         # and gets restarted reads as active here, so this is a precondition rather than
         # a result.
-        - name: Assert the Docmost systemd service is active
+        - name: Assert the Docmost systemd services are active
           ansible.builtin.assert:
-            that: docmost_service.status.ActiveState == 'active'
-            fail_msg: "docmost.service is not active ({{ docmost_service.status.ActiveState }})"
-            success_msg: "docmost.service is active"
+            that: docmost_services.results | map(attribute='status.ActiveState') | unique | list == ['active']
+            fail_msg: >-
+              Not every service is active:
+              {{ dict(docmost_verify_units | zip(docmost_services.results | map(attribute='status.ActiveState'))) }}
+            success_msg: "Every systemd service is active"
 
-        - name: Retrieve the Docmost systemd service log for debugging
+        - name: Retrieve the Docmost systemd services log for debugging
           when: docmost_debug_service_enabled | bool
           ansible.builtin.command:
-            cmd: journalctl --no-pager --output=cat --unit=docmost.service
+            cmd: "journalctl --no-pager --output=cat --unit={{ item }}"
           changed_when: false
+          loop: "{{ docmost_verify_units }}"
 
         # Docmost only starts listening once it has connected to Redis, connected to
         # Postgres and finished migrating the schema, so reaching this point already
@@ -486,7 +495,7 @@
         - name: Show the Docmost verification summary
           ansible.builtin.debug:
             msg:
-              - "Docmost systemd: {{ docmost_identifier }}.service is {{ docmost_service.status.ActiveState }}"
+              - "Docmost systemd: {% for unit, state in docmost_verify_units | zip(docmost_services.results | map(attribute='status.ActiveState')) %}{{ unit }} ({{ state }}){% if not loop.last %}, {% endif %}{% endfor %}"
               - "Docmost version: {{ (docmost_package_json.stdout | from_json).version }}"
               - "Docmost workspace endpoint: 404 before setup, {{ docmost_workspace_after_setup.status }} after"
               - "Docmost page: created over the API and read back out of Postgres"
