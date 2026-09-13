@@ -324,8 +324,8 @@
         - name: Show the Docmost verification summary
           ansible.builtin.debug:
             msg:
-              - "Docmost systemd: {% for unit, state in docmost_verify_units | zip(docmost_server_services.results | map(attribute='status.ActiveState')) %}{{ unit }} ({{ state }}){% if not loop.last %}, {% endif %}{% endfor %}"
-              - "Docmost server restarts: {% for unit, restarts in docmost_verify_units | zip(docmost_restarts_after.results | map(attribute='status.NRestarts')) %}{{ restarts }} ({{ unit }}){% if not loop.last %}, {% endif %}{% endfor %}"
+              - "Docmost systemd: {% for unit, state in docmost_verify_units | zip(docmost_services.results | map(attribute='status.ActiveState')) %}{{ unit }} ({{ state }}){% if not loop.last %}, {% endif %}{% endfor %}"
+              - "Docmost restarts: {% for unit, restarts in docmost_verify_units | zip(docmost_restarts_after.results | map(attribute='status.NRestarts')) %}{{ restarts }} ({{ unit }}){% if not loop.last %}, {% endif %}{% endfor %}"
               - "Docmost version: {{ (docmost_package_json.stdout | from_json).version }}"
               - "Docmost source: {{ docmost_container_image_self_build_src_files_path }} at {{ docmost_source_tag.stdout | trim }}"
               - "Docmost image: {{ docmost_verify_self_build_image }}, built here (no registry digest)"
