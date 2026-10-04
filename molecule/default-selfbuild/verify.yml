@@ -140,15 +140,16 @@
           register: docmost_image_raw
           changed_when: false
 
-        # An image that came from a registry carries the digest it was pulled under.
-        # An image that was built on this machine has never had one, which is what
-        # separates a genuine self-build from a pull that happened to be tagged the
-        # same way.
+        # An image that came from a registry carries the time upstream built it. An
+        # image that was built on this machine was created during this test run,
+        # which is what separates a genuine self-build from a pull that happened to
+        # be tagged the same way. Repository digests cannot tell the two apart:
+        # Docker's containerd image store records one for local builds too.
         - name: Assert that the image was built here rather than pulled
           ansible.builtin.assert:
-            that: (docmost_image_raw.stdout | from_json | first).RepoDigests | length == 0
-            fail_msg: "{{ docmost_verify_self_build_image }} carries registry digests {{ (docmost_image_raw.stdout | from_json | first).RepoDigests }}, so it was pulled, not built"
-            success_msg: "{{ docmost_verify_self_build_image }} carries no registry digest, so it was built on this machine"
+            that: (now(utc=true) - ((docmost_image_raw.stdout | from_json | first).Created[:19] | to_datetime('%Y-%m-%dT%H:%M:%S'))).total_seconds() < 3600
+            fail_msg: "{{ docmost_verify_self_build_image }} was created at {{ (docmost_image_raw.stdout | from_json | first).Created }}, not during this test run, so it was pulled, not built"
+            success_msg: "{{ docmost_verify_self_build_image }} was created during this test run, so it was built on this machine"
 
         # --------------------------------------------------------------------------
         # Negative control - the self-built image serves, and is not yet usable
