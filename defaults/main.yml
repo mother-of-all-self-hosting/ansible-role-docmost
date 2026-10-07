@@ -292,7 +292,7 @@ docmost_mailer_enabled: false
 # Valid values: smtp, postmark
 docmost_environment_variable_mail_driver: smtp
 
-# Set the email address that emails will be sent from
+# Specify the email address that emails will be sent from
 docmost_environment_variable_mail_from_address: ""
 docmost_environment_variable_mail_from_name: docmost
 

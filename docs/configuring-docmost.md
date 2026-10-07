@@ -124,10 +124,10 @@ You can configure a mailer for functions such as user invitation. Docmost suppor
 ```yaml
 docmost_mailer_enabled: true
 
-# Set the email address that emails will be sent from
+# Specify the email address that emails will be sent from
 docmost_environment_variable_mail_from_address: hello@example.com
 
-# Set the name that emails will be sent from
+# Specify the name that emails will be sent from
 docmost_environment_variable_mail_from_name: docmost
 ```
 
@@ -136,16 +136,16 @@ docmost_environment_variable_mail_from_name: docmost
 To use a SMTP server, add the following configuration to your `vars.yml` file:
 
 ```yaml
-# Set the hostname of the SMTP server
+# Specify the hostname of the SMTP server
 docmost_environment_variable_smtp_host: 127.0.0.1
 
-# Set the port to use for the SMTP server
+# Specify the port number of the SMTP server
 docmost_environment_variable_smtp_port: 587
 
-# Set the username for the SMTP server
+# Specify the username for the SMTP server
 docmost_environment_variable_smtp_username: ""
 
-# Set the password for the SMTP server
+# Specify the password for the SMTP server
 docmost_environment_variable_smtp_password: ""
 
 # Control whether TLS is used when connecting to the server
