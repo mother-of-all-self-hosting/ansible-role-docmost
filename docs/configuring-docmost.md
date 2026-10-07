@@ -136,16 +136,16 @@ docmost_environment_variable_mail_from_name: docmost
 To use a SMTP server, add the following configuration to your `vars.yml` file:
 
 ```yaml
-# Specify the hostname of the SMTP server
+# Specify SMTP server hostname
 docmost_environment_variable_smtp_host: 127.0.0.1
 
-# Specify the port number of the SMTP server
+# Specify SMTP server port number
 docmost_environment_variable_smtp_port: 587
 
-# Specify the username for the SMTP server
+# Specify SMTP server username
 docmost_environment_variable_smtp_username: ""
 
-# Specify the password for the SMTP server
+# Specify SMTP server password
 docmost_environment_variable_smtp_password: ""
 
 # Control whether TLS is used when connecting to the server
