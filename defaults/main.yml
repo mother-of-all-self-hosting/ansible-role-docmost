@@ -237,7 +237,7 @@ docmost_database_password: ""
 # Valid values: see https://www.postgresql.org/docs/11/libpq-ssl.html#LIBPQ-SSL-SSLMODE-STATEMENTS
 docmost_database_sslmode: disable
 docmost_database_name: "docmost"
-docmost_environment_variable_database_url: "postgres://{{ docmost_database_username }}:{{ docmost_database_password }}@{{ docmost_database_hostname }}:{{ docmost_database_port }}/{{ docmost_database_name }}?schema=public&sslmode={{ docmost_database_sslmode }}"
+docmost_environment_variable_database_url: "postgres://{{ docmost_database_username | urlencode | replace('/', '%2F') }}:{{ docmost_database_password | urlencode | replace('/', '%2F') }}@{{ docmost_database_hostname }}:{{ docmost_database_port }}/{{ docmost_database_name }}?schema=public&sslmode={{ docmost_database_sslmode }}"
 
 # Specify Redis configuration
 #
@@ -255,7 +255,7 @@ docmost_redis_dbnumber: ""
 # username/password defaults above into `redis://:@hostname:6379/` and make Docmost refuse
 # to start with "REDIS_URL must be a valid redis connection string".
 # The userinfo and database-number sections are consequently only emitted when set.
-docmost_environment_variable_redis_url: "redis://{{ (docmost_redis_username | string) + ':' + (docmost_redis_password | string) + '@' if (docmost_redis_username | string | length > 0 or docmost_redis_password | string | length > 0) else '' }}{{ docmost_redis_hostname }}:{{ docmost_redis_port }}{{ '/' + (docmost_redis_dbnumber | string) if (docmost_redis_dbnumber | string | length > 0) else '' }}"
+docmost_environment_variable_redis_url: "redis://{{ (docmost_redis_username | string | urlencode | replace('/', '%2F')) + ':' + (docmost_redis_password | string | urlencode | replace('/', '%2F')) + '@' if (docmost_redis_username | string | length > 0 or docmost_redis_password | string | length > 0) else '' }}{{ docmost_redis_hostname }}:{{ docmost_redis_port }}{{ '/' + (docmost_redis_dbnumber | string) if (docmost_redis_dbnumber | string | length > 0) else '' }}"
 
 # Specify the timezone
 docmost_environment_variables_tz: UTC
